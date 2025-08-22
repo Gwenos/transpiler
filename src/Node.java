@@ -5,8 +5,8 @@ public abstract class Node {}
 //==========================EXPRESSION=================================
 
 class AssignmentNode extends Node{
-	private String identifier;
-	private Node value;
+	private final String identifier;
+	private final Node value;
 	public AssignmentNode(String identifier, Node value){
 		this.identifier = identifier;
 		this.value = value;
@@ -15,30 +15,15 @@ class AssignmentNode extends Node{
 }
 
 class OperatorNode extends Node{
-	private Node left;
-	private String operator;
-	private Node right;
+	private final Node left;
+	private final String operator;
+	private final Node right;
 	public OperatorNode(Node left, String operaor, Node right){
 		this.left = left;
 		this.operator = operaor;
 		this.right = right;
 	}
 	public String toString(){return "(" + left + " " + operator + " " + right + ")";}
-}
-
-//EXPRESSION    -> TERM (('+' | '-') TERM)*
-class ExpressionNode extends Node{
-	private Node term;
-	private String operator;
-	private List<Node> terms;
-	public ExpressionNode(Node term, String operator, List<Node> terms){
-		this.term = term;
-		this.operator = operator;
-		this.terms = terms;
-	}
-	public String toString(){
-		return terms.isEmpty() ? term.toString() : term + " " + operator + " " + terms;
-	}
 }
 
 //=======================================TYPE====================================

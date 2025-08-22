@@ -4,8 +4,6 @@ import java.util.List;
 public class LexicalAnalysis {
 
 	private final String source_file_content;
-	private final Error error = new Error();
-
 	private final String regex_python_separators = "\n";
 
 	public LexicalAnalysis(String source_file_content){
