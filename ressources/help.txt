@@ -1,0 +1,51 @@
+Langage source : Python
+Langage cible : Java
+
+Etape :
+    1.  Analyse lexical (regex)
+    2.  Analyse syntaxique (ATS du langage sources)
+    3.  Analyse sémantique (Type check)
+    4.  Transformation ATS source en ATS cible
+    5.  Génère code cible
+
+
+
+
+======================GRAMMAIRE===============================
+        PROGRAM       -> STATEMENT*
+
+        STATEMENT     -> ASSIGNMENT
+                       | EXPRESSION
+                       | IF_STATEMENT
+                       | WHILE_STATEMENT
+                       | DEF_STATEMENT
+                       | RETURN_STATEMENT
+
+        ASSIGNMENT    -> IDENTIFIER '=' EXPRESSION
+
+        IF_STATEMENT  -> 'if' EXPRESSION ':' BLOCK ('elif' EXPRESSION ':' BLOCK)* ('else' ':' BLOCK)?
+        WHILE_STATEMENT -> 'while' EXPRESSION ':' BLOCK
+        DEF_STATEMENT -> 'def' IDENTIFIER '(' PARAMS? ')' ':' BLOCK
+        RETURN_STATEMENT -> 'return' EXPRESSION
+
+        BLOCK         -> NEWLINE INDENT STATEMENT+ DEDENT
+                       | STATEMENT   // version simplifiée : une seule instruction sur la même ligne
+
+        PARAMS        -> IDENTIFIER (',' IDENTIFIER)*
+
+        EXPRESSION    -> TERM (('+' | '-') TERM)*
+        TERM          -> FACTOR (('*' | '/' | '%') FACTOR)*
+        FACTOR        -> NUMBER
+                       | STRING
+                       | IDENTIFIER
+                       | '(' EXPRESSION ')'
+                       | FUNCTION_CALL
+
+        FUNCTION_CALL -> IDENTIFIER '(' ARGS? ')'
+        ARGS          -> EXPRESSION (',' EXPRESSION)*
+
+        IDENTIFIER    -> [a-zA-Z_][a-zA-Z0-9_]*
+        NUMBER        -> DIGITS ('.' DIGITS)?
+        STRING        -> '"' ( [^"\n\\] | '\\' . )* '"'
+                       | '\'' ( [^'\n\\] | '\\' . )* '\''
+        DIGITS        -> [0-9]+
