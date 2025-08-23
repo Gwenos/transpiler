@@ -3,10 +3,24 @@ b=2.3
 
 str="hello"
 
-c = 1 + 2
+
+c = ( str + popo )
 d = a + b - 7.3
 
-test = 1 + 4 * 8 / 2
+test = 1 + 4 * (1+1) / fonctionCallInExpression(arg)
+
+1 + 1
+
+fonctionCallOutExpression(arg1, arg2, arg3)
+
+#sans argument
+fonctionCallOutExpression()
+
+True
+
+# print()
+#
+# print(d)
 
 
-#print(d)
+# def fonctionCall(arg1, arg2):

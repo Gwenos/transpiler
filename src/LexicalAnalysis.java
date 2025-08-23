@@ -15,16 +15,16 @@ public class LexicalAnalysis {
 		//===========TOKENIZED================
 		Tokenizer tokenizer = new Tokenizer();
 		List<Token> tokens = tokenizer.tokenize(source_file_content, regex_python_separators);
-//		for(Token token : tokens){
-//			System.out.println(token);
-//		}
+		for(Token token : tokens){
+			System.out.println(token);
+		}
 
 		//================PARSED================
-		Parser parser = new Parser();
-		List<Node> nodes = parser.parse(tokens);
-		for(Node node : nodes){
-			System.out.println(node);
-		}
+//		Parser parser = new Parser();
+//		List<Node> nodes = parser.parse(tokens);
+//		for(Node node : nodes){
+//			System.out.println(node);
+//		}
 
 		return "";
 	}

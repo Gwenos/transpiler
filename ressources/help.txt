@@ -34,10 +34,20 @@ Etape :
         PARAMS        -> IDENTIFIER (',' IDENTIFIER)*
 
         EXPRESSION    -> TERM (('+' | '-') TERM)*
+                        | OR_EXPR                                       -->change
+        OR_EXPR           -> AND_EXPR ('or' AND_EXPR)*                  -->change
+        AND_EXPR          -> NOT_EXPR ('and' NOT_EXPR)*                 -->change
+        NOT_EXPR          -> 'not' NOT_EXPR                             -->change
+                           | COMPARE                                    -->change
+
+        COMPARE           -> EXPRESSION (COMPARE_OP EXPRESSION)?        -->change
+        COMPARE_OP        -> '==' | '!=' | '<' | '<=' | '>' | '>='      -->change
+
         TERM          -> FACTOR (('*' | '/' | '%') FACTOR)*
         FACTOR        -> NUMBER
                        | STRING
                        | IDENTIFIER
+                       | BOOLEAN                                        -->change
                        | '(' EXPRESSION ')'
                        | FUNCTION_CALL
 

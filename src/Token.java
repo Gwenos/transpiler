@@ -2,11 +2,14 @@ enum TokenType {
 	KEYWORD,
 	IDENTIFIER,
 	LITERAL,
+	BOOLEAN,
+
 	OPERATOR,
 
 	LPAREN,	//(
 	RPAREN,	//)
 	COLON,	//:
+	COMMA,	//,
 
 	INDENT,
 	DEDENT,
@@ -19,13 +22,17 @@ public class Token {
 
 	public TokenType type;
 	public String value;
+	public String line;
+	public int nb_ligne;
 
-	public Token(TokenType type, String value){
+	public Token(TokenType type, String value, String line, int nb_ligne){
 		this.type = type;
 		this.value = value;
+		this.line = line;
+		this.nb_ligne = nb_ligne;
 	}
 
 	public String toString(){
-		return type + ">>" + value + "<<";
+		return type + "(" + ANSI.CYAN + value + ANSI.RESET + ")";
 	}
 }

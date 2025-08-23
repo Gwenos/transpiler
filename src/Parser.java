@@ -1,3 +1,4 @@
+import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,8 +12,13 @@ public class Parser {
 		return tokens.get(indexCurrentToken);
 	}
 	public void consumeToken(TokenType type){
-		if(getCurrentToken().type == type) indexCurrentToken++;
-		else throw new RuntimeException("Unexpected token: " + getCurrentToken());
+		if(getCurrentToken().type == type) {
+			indexCurrentToken++;
+		}else{
+			Token current = getCurrentToken();
+			Error.lexicalError(current.line, type + " consommé au lieu de "+current.toString(), current.nb_ligne);
+			throw new RuntimeException(current.toString());
+		}
 	}
 	private Token lookAhead(int cmb) {
 		return tokens.get(indexCurrentToken+cmb);
@@ -25,15 +31,15 @@ public class Parser {
 
 	public List<Node> parse(List<Token> tokens) {
 		this.tokens = tokens;
-		return parseProgram();
+		return Program();
 	}
 
-	//	PROGRAM -> (STATEMENT NEWLINE*)* EOF
-	public List<Node> parseProgram() {
+	//	PROGRAM -> (STATEMENT NEWLINE)* EOF
+	public List<Node> Program() {
 		List<Node> statements = new ArrayList<>();
 		while(!eof()){
-			Node statement = parseStatement();
-			consumeToken(TokenType.NEWLINE);
+			Node statement = Statement();
+			while (getCurrentToken().type == TokenType.NEWLINE) consumeToken(TokenType.NEWLINE);	//lignes vides
 			statements.add(statement);
 		}
 		return statements;
@@ -45,13 +51,14 @@ public class Parser {
 	//                  | WHILE_STATEMENT
 	//                  | DEF_STATEMENT
 	//                  | RETURN_STATEMENT
-	public Node parseStatement() {
+	public Node Statement() {
 		//Assignement
-		if (getCurrentToken().type == TokenType.IDENTIFIER) {
+		if (getCurrentToken().type == TokenType.IDENTIFIER || getCurrentToken().type == TokenType.LITERAL) {
 			if (lookAhead(1).type == TokenType.OPERATOR && lookAhead(1).value.equals("=")) {
-				return parseAssignement();
+				return Assignement();
 			} else {
-				return parseExpression();
+				if(getCurrentToken().type == TokenType.RPAREN) consumeToken(TokenType.RPAREN);	//c.f méthode Factor
+				return Expression();
 			}
 		} else if (getCurrentToken().type == TokenType.KEYWORD) {
 			switch (getCurrentToken().value) {
@@ -65,13 +72,16 @@ public class Parser {
 					return returnStatement();
 			}
 		} else if (getCurrentToken().type != TokenType.NEWLINE) {
-			throw new RuntimeException("Erreur parseStatement: " + getCurrentToken());
+			Token current = getCurrentToken();
+			Error.lexicalError(current.line, current.toString(), current.nb_ligne);
+			throw new RuntimeException("Erreur Statement: " + getCurrentToken());
 		}
 		return null;
 	}
 
 	//	IF_STATEMENT  -> 'if' EXPRESSION ':' BLOCK ('elif' EXPRESSION ':' BLOCK)* ('else' ':' BLOCK)?
 	public Node ifStatement(){
+		consumeToken(TokenType.KEYWORD);
 		return null;
 	}
 	public Node whileStatement(){
@@ -85,33 +95,34 @@ public class Parser {
 	}
 
 	//	ASSIGNMENT	->	IDENTIFIER	'='	EXPRESSION
-	public Node parseAssignement() {
+	public Node Assignement() {
 		String identifier = getCurrentToken().value;
 		consumeToken(TokenType.IDENTIFIER);
 		consumeToken(TokenType.OPERATOR);//	String operator = "=";
-		Node expression = parseExpression();
+		Node expression = Expression();
 		return new AssignmentNode(identifier, expression);
 	}
 
 	//	EXPRESSION	->	TERM (('+' | '-') TERM)*
-	public Node parseExpression() {
-		Node left = parseTerm();
+	public Node Expression() {
+		Node left = Term();
 		while(getCurrentToken().type == TokenType.OPERATOR && getCurrentToken().value.matches("[+-]")) {
 			String operator = getCurrentToken().value;
-			consumeToken(TokenType.OPERATOR);//=
-			Node right = parseTerm();
+			consumeToken(TokenType.OPERATOR);
+			Node right = Term();
 			left = new OperatorNode(left, operator, right);
 		}
+		if(getCurrentToken().type == TokenType.RPAREN) consumeToken(TokenType.RPAREN);	//c.f. méthode Factor
 		return left;
 	}
 
 	//	TERM	->	FACTOR (('*' | '/' | '%') FACTOR)*
-	public Node parseTerm() {
-		Node left = parseFactor();
+	public Node Term() {
+		Node left = Factor();
 		while(getCurrentToken().type == TokenType.OPERATOR && getCurrentToken().value.matches("[*/%]")) {
 			String operator = getCurrentToken().value;
 			consumeToken(TokenType.OPERATOR);
-			Node right = parseFactor();
+			Node right = Factor();
 			left = new OperatorNode(left, operator, right);
 		}
 		return left;
@@ -122,21 +133,56 @@ public class Parser {
 	//              | IDENTIFIER
 	//              | '(' EXPRESSION ')'
 	//				| FUNCTION_CALL
-	public Node parseFactor() {
+	public Node Factor() {
 		Token currentToken = getCurrentToken();
-		if(getCurrentToken().type == TokenType.LITERAL) {
-			consumeToken(TokenType.LITERAL);
-			return new LiteralNode(currentToken.value);
-		} else if (getCurrentToken().type == TokenType.IDENTIFIER) {
-			consumeToken(TokenType.IDENTIFIER);
-			return new IdentifierNode(currentToken.value);
-		} //else if (getCurrentToken().type == TokenType.LPAREN) {
-//			consumeToken(TokenType.LPAREN);
-//			Node expression = parseExpression();
-//			consumeToken(TokenType.RPAREN);
-//			return new ExpressionNode();
-//		}
-		return null;
+
+		switch (currentToken.type) {
+			case TokenType.LITERAL : {//NUMBER | STRING
+				consumeToken(TokenType.LITERAL);
+				return new LiteralNode(currentToken.value);
+			}
+			case TokenType.IDENTIFIER : {
+				if(lookAhead(1).type == TokenType.LPAREN) {//FUNCTION_CALL
+					return FonctionCall();
+				}else{
+					consumeToken(TokenType.IDENTIFIER);//IDENTIFIER
+					return new IdentifierNode(currentToken.value);
+				}
+			}
+			case TokenType.LPAREN : {//'(' EXPRESSION ')'
+				consumeToken(TokenType.LPAREN);
+				return Expression();
+			}
+			default : {
+//				Error.lexicalError(currentToken.line, currentToken.toString(), currentToken.nb_ligne);
+				return new LiteralNode("");
+			}
+		}
+	}
+
+	//	FUNCTION_CALL	->	IDENTIFIER '(' ARGS? ')'
+	public Node FonctionCall(){
+		String identifier = getCurrentToken().value;
+		consumeToken(TokenType.IDENTIFIER);
+		consumeToken(TokenType.LPAREN);
+		if(getCurrentToken().type == TokenType.RPAREN) {
+			consumeToken(TokenType.RPAREN);
+			return new FonctionCallNode(identifier, Args());
+		}else {
+			Node args = Args();
+			return new FonctionCallNode(identifier, args);
+		}
+	}
+
+	//	ARGS	->	EXPRESSION (',' EXPRESSION)*
+	public Node Args(){
+		Node left = Expression();
+		while (getCurrentToken().type == TokenType.COMMA){
+			consumeToken(TokenType.COMMA);
+			Node right = Expression();
+			left = new ArgumentNode(left, right);
+		}
+		return left;
 	}
 
 }

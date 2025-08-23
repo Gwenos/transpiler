@@ -11,7 +11,7 @@ class AssignmentNode extends Node{
 		this.identifier = identifier;
 		this.value = value;
 	}
-	public String toString(){return identifier + " = " + value;}
+	public String toString(){return identifier + ANSI.PURPLE + " = " + ANSI.RESET + value;}
 }
 
 class OperatorNode extends Node{
@@ -23,17 +23,28 @@ class OperatorNode extends Node{
 		this.operator = operaor;
 		this.right = right;
 	}
-	public String toString(){return "(" + left + " " + operator + " " + right + ")";}
+	public String toString(){return "(" + left + ANSI.PURPLE + " " + operator + " " + ANSI.RESET + right + ")";}
+}
+
+class ArgumentNode extends Node{
+	private final Node left;
+	private final Node right;
+	ArgumentNode(Node left, Node right){
+		this.left = left;
+		this.right = right;
+	}
+	public String toString(){return left + ANSI.PURPLE + ", " + ANSI.RESET + right;}
 }
 
 //=======================================TYPE====================================
+//noeud terminaux
 
 class LiteralNode extends Node {
 	String value;
 	LiteralNode(String value) {
 		this.value = value;
 	}
-	public String toString() { return value; }
+	public String toString() { return ANSI.CYAN + value + ANSI.RESET; }
 }
 
 class IdentifierNode extends Node {
@@ -41,5 +52,12 @@ class IdentifierNode extends Node {
 	IdentifierNode(String name) {
 		this.identifier = name;
 	}
-	public String toString() { return identifier; }
+	public String toString() { return ANSI.CYAN + identifier + ANSI.RESET; }
+}
+
+class FonctionCallNode extends Node {
+	String identifier;
+	Node args;
+	FonctionCallNode(String identifier, Node args) {this.identifier = identifier;this.args = args;}
+	public String toString() { return identifier+"("+args+")"; }
 }
