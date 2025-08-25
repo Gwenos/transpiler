@@ -36,6 +36,30 @@ class ArgumentNode extends Node{
 	public String toString(){return left + ANSI.PURPLE + ", " + ANSI.RESET + right;}
 }
 
+class NotNode extends Node{
+	private final Node expression;
+	public NotNode(Node expression){
+		this.expression = expression;
+	}
+	public String toString(){return ANSI.PURPLE + "not " + ANSI.RESET + expression;}
+}
+
+class IfNode extends Node{
+	private final Node bool_expr;
+	IfNode(Node bool_expr){
+		this.bool_expr = bool_expr;
+	}
+	public String toString(){return "if " + bool_expr + " :";}
+}
+
+class WhileNode extends Node{
+	private final Node bool_expr;
+	WhileNode(Node bool_expr){
+		this.bool_expr = bool_expr;
+	}
+	public String toString(){return "while " + bool_expr + " :";}
+}
+
 //=======================================TYPE====================================
 //noeud terminaux
 

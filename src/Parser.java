@@ -54,7 +54,7 @@ public class Parser {
 	public Node Statement() {
 		//Assignement
 		if (getCurrentToken().type == TokenType.IDENTIFIER || getCurrentToken().type == TokenType.LITERAL) {
-			if (lookAhead(1).type == TokenType.OPERATOR && lookAhead(1).value.equals("=")) {
+			if (lookAhead(1).type == TokenType.ASSIGN) {
 				return Assignement();
 			} else {
 				if(getCurrentToken().type == TokenType.RPAREN) consumeToken(TokenType.RPAREN);	//c.f méthode Factor
@@ -79,13 +79,16 @@ public class Parser {
 		return null;
 	}
 
-	//	IF_STATEMENT  -> 'if' EXPRESSION ':' BLOCK ('elif' EXPRESSION ':' BLOCK)* ('else' ':' BLOCK)?
+	//	IF_STATEMENT  -> 'if' BOOLEXPR ':' BLOCK ('elif' BOOLEXPR ':' BLOCK)* ('else' ':' BOOLEXPR)?
 	public Node ifStatement(){
 		consumeToken(TokenType.KEYWORD);
-		return null;
+		return new IfNode(BooleanExpression());
 	}
+
+	// WHILE_STATEMENT -> 'while' EXPRESSION ':' BLOCK
 	public Node whileStatement(){
-		return null;
+		consumeToken(TokenType.KEYWORD);
+		return new WhileNode(BooleanExpression());
 	}
 	public Node defStatement(){
 		return null;
@@ -98,13 +101,14 @@ public class Parser {
 	public Node Assignement() {
 		String identifier = getCurrentToken().value;
 		consumeToken(TokenType.IDENTIFIER);
-		consumeToken(TokenType.OPERATOR);//	String operator = "=";
+		consumeToken(TokenType.ASSIGN);//	String operator = "=";
 		Node expression = Expression();
 		return new AssignmentNode(identifier, expression);
 	}
 
 	//	EXPRESSION	->	TERM (('+' | '-') TERM)*
 	public Node Expression() {
+
 		Node left = Term();
 		while(getCurrentToken().type == TokenType.OPERATOR && getCurrentToken().value.matches("[+-]")) {
 			String operator = getCurrentToken().value;
@@ -115,6 +119,57 @@ public class Parser {
 		if(getCurrentToken().type == TokenType.RPAREN) consumeToken(TokenType.RPAREN);	//c.f. méthode Factor
 		return left;
 	}
+
+	//	BOOL_EXPR -> OR_EXPR
+	public Node BooleanExpression(){
+		return OrExpression();
+	}
+
+	//	OR_EXPR -> AND_EXPR ('or' AND_EXPR)*
+	public Node OrExpression(){
+		Node left = AndExpression();
+		while(getCurrentToken().type == TokenType.KEYWORD && getCurrentToken().value.equals("or")) {
+			consumeToken(TokenType.KEYWORD);
+			Node right = AndExpression();
+			left = new OperatorNode(left, "or", right);
+		}
+		return left;
+	}
+
+	//	AND_EXPR -> NOT_EXPR ('and' NOT_EXPR)*
+	public Node AndExpression(){
+		Node left = NotExpression();
+		while(getCurrentToken().type == TokenType.KEYWORD && getCurrentToken().value.equals("and")) {
+			consumeToken(TokenType.KEYWORD);
+			Node right = NotExpression();
+			left = new OperatorNode(left, "and", right);
+		}
+		return left;
+	}
+
+	//	NOT_EXPR -> 'not' NOT_EXPR | COMPARE
+	public Node NotExpression(){
+		if(getCurrentToken().type == TokenType.KEYWORD && getCurrentToken().value.equals("not")) {
+			consumeToken(TokenType.KEYWORD);
+			return new NotNode(NotExpression());
+		}else{
+			return Compare();
+		}
+	}
+
+	//	COMPARE -> EXPRESSION (COMPARE_OP EXPRESSION)?
+	public Node Compare(){
+		Node left = Expression();
+		if(getCurrentToken().type == TokenType.COMPARE_OPERATOR) {
+			String operator = getCurrentToken().value;
+			consumeToken(TokenType.COMPARE_OPERATOR);
+			Node right = Expression();
+			left = new OperatorNode(left, operator, right);
+		}
+		if(getCurrentToken().type==TokenType.COLON)consumeToken(TokenType.COLON);
+		return left;
+	}
+
 
 	//	TERM	->	FACTOR (('*' | '/' | '%') FACTOR)*
 	public Node Term() {

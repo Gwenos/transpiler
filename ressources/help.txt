@@ -34,13 +34,14 @@ Etape :
         PARAMS        -> IDENTIFIER (',' IDENTIFIER)*
 
         EXPRESSION    -> TERM (('+' | '-') TERM)*
-                        | OR_EXPR                                       -->change
+
+        BOOL_EXPR     -> OR_EXPR                                       -->change
         OR_EXPR           -> AND_EXPR ('or' AND_EXPR)*                  -->change
         AND_EXPR          -> NOT_EXPR ('and' NOT_EXPR)*                 -->change
         NOT_EXPR          -> 'not' NOT_EXPR                             -->change
                            | COMPARE                                    -->change
 
-        COMPARE           -> EXPRESSION (COMPARE_OP EXPRESSION)?        -->change
+        COMPARE           -> BOOL_EXPR (COMPARE_OP BOOL_EXPR)?        -->change
         COMPARE_OP        -> '==' | '!=' | '<' | '<=' | '>' | '>='      -->change
 
         TERM          -> FACTOR (('*' | '/' | '%') FACTOR)*
