@@ -82,7 +82,24 @@ public class Parser {
 	//	IF_STATEMENT  -> 'if' BOOLEXPR ':' BLOCK ('elif' BOOLEXPR ':' BLOCK)* ('else' ':' BOOLEXPR)?
 	public Node ifStatement(){
 		consumeToken(TokenType.KEYWORD);
-		return new IfNode(BooleanExpression());
+		Node ifBoolExpr = BooleanExpression();
+		consumeToken(TokenType.COLON);
+		Node ifBlock = block();
+		Node ifNode = new IfNode(new NullNode(), "if", ifBoolExpr, ifBlock);
+		while (getCurrentToken().type==TokenType.KEYWORD && getCurrentToken().value.equals("elif")){
+			consumeToken(TokenType.KEYWORD);
+			Node elifBoolExpr = BooleanExpression();
+			consumeToken(TokenType.COLON);
+			Node elifBlock = block();
+			ifNode = new IfNode(ifNode, "elif", elifBoolExpr, elifBlock);
+		}
+		if(getCurrentToken().type==TokenType.KEYWORD && getCurrentToken().value.equals("else")){
+			consumeToken(TokenType.KEYWORD);
+			consumeToken(TokenType.COLON);
+			Node elseBloc = block();
+			ifNode = new IfNode(ifNode, "else", new NullNode(), elseBloc);
+		}
+		return ifNode;
 	}
 
 	// WHILE_STATEMENT -> 'while' EXPRESSION ':' BLOCK
@@ -166,8 +183,31 @@ public class Parser {
 			Node right = Expression();
 			left = new OperatorNode(left, operator, right);
 		}
-		if(getCurrentToken().type==TokenType.COLON)consumeToken(TokenType.COLON);
 		return left;
+	}
+
+	// BLOCK -> NEWLINE INDENT (STATEMENT NEWLINE+)+ DEDENT | STATEMENT
+	public Node block(){
+		List<Node> statements = new ArrayList<>();
+		if(getCurrentToken().type == TokenType.NEWLINE && lookAhead(1).type==TokenType.INDENT) {
+			consumeToken(TokenType.NEWLINE);
+			consumeToken(TokenType.INDENT);
+			statements.add(Statement());
+
+			while (getCurrentToken().type != TokenType.DEDENT) {
+				if (getCurrentToken().type == TokenType.NEWLINE) {
+					consumeToken(TokenType.NEWLINE);
+				} else {
+					statements.add(Statement());
+				}
+			}
+
+//			while(getCurrentToken().type==TokenType.NEWLINE) consumeToken(TokenType.NEWLINE);
+			consumeToken(TokenType.DEDENT);			;
+		}else {
+			statements.add(Statement());
+		}
+		return new BlockNode(statements);
 	}
 
 

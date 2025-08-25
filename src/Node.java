@@ -44,12 +44,33 @@ class NotNode extends Node{
 	public String toString(){return ANSI.PURPLE + "not " + ANSI.RESET + expression;}
 }
 
-class IfNode extends Node{
-	private final Node bool_expr;
-	IfNode(Node bool_expr){
-		this.bool_expr = bool_expr;
+class IfNode2 extends Node{
+	private final String keyword;
+	private final Node boolExpr;
+	private final Node block;
+	public IfNode2(String keyword, Node boolExpr, Node block){
+		this.keyword = keyword;
+		this.boolExpr = boolExpr;
+		this.block = block;
 	}
-	public String toString(){return "if " + bool_expr + " :";}
+
+	public String toString() {return keyword + " " + boolExpr + "\n    " + block;}
+}
+
+class IfNode extends Node{
+	private final Node ifNode;
+	private final String keyword;
+	private final Node boolExpr;
+	private final Node block;
+	IfNode(Node ifNode, String keyword, Node boolExpr, Node block){
+		this.ifNode = ifNode;
+		this.keyword = keyword;
+		this.boolExpr = boolExpr;
+		this.block = block;
+	}
+	public String toString(){
+		return ifNode + ANSI.PURPLE + keyword + ANSI.RESET + " " + boolExpr + " :\n    " + block + "\n";
+	}
 }
 
 class WhileNode extends Node{
@@ -84,4 +105,27 @@ class FonctionCallNode extends Node {
 	Node args;
 	FonctionCallNode(String identifier, Node args) {this.identifier = identifier;this.args = args;}
 	public String toString() { return identifier+"("+args+")"; }
+}
+
+class BlockNode extends Node{
+	List<Node> statements;
+	BlockNode(List<Node> statements){
+		this.statements = statements;
+	}
+	public String toString(){
+		StringBuilder str = new StringBuilder();
+		for(Node statement : statements){
+			str.append(statement).append("\n    ");
+		}
+		return str.toString();
+	}
+}
+
+class NullNode extends Node{
+	public String toString() {
+		return "";
+	}
+	public boolean equals(Node other){
+		return other==null;
+	}
 }
