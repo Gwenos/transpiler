@@ -44,32 +44,26 @@ class NotNode extends Node{
 	public String toString(){return ANSI.PURPLE + "not " + ANSI.RESET + expression;}
 }
 
-class IfNode2 extends Node{
-	private final String keyword;
-	private final Node boolExpr;
-	private final Node block;
-	public IfNode2(String keyword, Node boolExpr, Node block){
-		this.keyword = keyword;
-		this.boolExpr = boolExpr;
-		this.block = block;
-	}
-
-	public String toString() {return keyword + " " + boolExpr + "\n    " + block;}
-}
-
 class IfNode extends Node{
-	private final Node ifNode;
-	private final String keyword;
 	private final Node boolExpr;
 	private final Node block;
-	IfNode(Node ifNode, String keyword, Node boolExpr, Node block){
-		this.ifNode = ifNode;
-		this.keyword = keyword;
+	private final List<IfNode> orElse;
+	IfNode(Node boolExpr, Node block, List<IfNode> orElse){
 		this.boolExpr = boolExpr;
 		this.block = block;
+		this.orElse = orElse;
 	}
 	public String toString(){
-		return ifNode + ANSI.PURPLE + keyword + ANSI.RESET + " " + boolExpr + " :\n    " + block+"\n";
+		StringBuilder str = new StringBuilder();
+		str.append("if " + boolExpr + " :\n    " + block+(orElse.isEmpty()?"":"\n"));
+		for (int i = 0; i < orElse.size(); i++) {
+			if(i==orElse.size()-1){
+				str.append("else :\n    "+orElse.get(i).block);
+			}else{
+				str.append("elif "+orElse.get(i).boolExpr +" :\n    "+orElse.get(i).block+"\n");
+			}
+		}
+		return str.toString();
 	}
 }
 

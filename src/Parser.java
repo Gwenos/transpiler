@@ -81,25 +81,26 @@ public class Parser {
 
 	//	IF_STATEMENT  -> 'if' BOOLEXPR ':' BLOCK ('elif' BOOLEXPR ':' BLOCK)* ('else' ':' BOOLEXPR)?
 	public Node ifStatement(){
+		List<IfNode> orElses = new ArrayList<>();
+
 		consumeToken(TokenType.KEYWORD);
 		Node ifBoolExpr = BooleanExpression();
 		consumeToken(TokenType.COLON);
 		Node ifBlock = block();
-		Node ifNode = new IfNode(new NullNode(), "if", ifBoolExpr, ifBlock);
 		while (getCurrentToken().type==TokenType.KEYWORD && getCurrentToken().value.equals("elif")){
 			consumeToken(TokenType.KEYWORD);
 			Node elifBoolExpr = BooleanExpression();
 			consumeToken(TokenType.COLON);
 			Node elifBlock = block();
-			ifNode = new IfNode(ifNode, "elif", elifBoolExpr, elifBlock);
+			orElses.add(new IfNode(elifBoolExpr, elifBlock, new ArrayList<>()));
 		}
 		if(getCurrentToken().type==TokenType.KEYWORD && getCurrentToken().value.equals("else")){
 			consumeToken(TokenType.KEYWORD);
 			consumeToken(TokenType.COLON);
 			Node elseBloc = block();
-			ifNode = new IfNode(ifNode, "else", new NullNode(), elseBloc);
+			orElses.add(new IfNode(new LiteralNode(""), elseBloc, new ArrayList<>()));
 		}
-		return ifNode;
+		return new IfNode(ifBoolExpr, ifBlock, orElses);
 	}
 
 	// WHILE_STATEMENT -> 'while' EXPRESSION ':' BLOCK
