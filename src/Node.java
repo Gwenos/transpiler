@@ -69,7 +69,7 @@ class IfNode extends Node{
 		this.block = block;
 	}
 	public String toString(){
-		return ifNode + ANSI.PURPLE + keyword + ANSI.RESET + " " + boolExpr + " :\n    " + block + "\n";
+		return ifNode + ANSI.PURPLE + keyword + ANSI.RESET + " " + boolExpr + " :\n    " + block+"\n";
 	}
 }
 
@@ -117,7 +117,7 @@ class BlockNode extends Node{
 		for(Node statement : statements){
 			str.append(statement).append("\n    ");
 		}
-		return str.toString();
+		return str.toString().substring(0, str.length()-5);
 	}
 }
 

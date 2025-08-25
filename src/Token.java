@@ -4,7 +4,9 @@ enum TokenType {
 	LITERAL,
 	BOOLEAN,
 
-	OPERATOR,
+	ASSIGN,	//=
+	OPERATOR,	//(+-/*%)
+	COMPARE_OPERATOR,	//(==|!=|<|<=|>|>=)
 
 	LPAREN,	//(
 	RPAREN,	//)

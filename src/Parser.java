@@ -201,8 +201,6 @@ public class Parser {
 					statements.add(Statement());
 				}
 			}
-
-//			while(getCurrentToken().type==TokenType.NEWLINE) consumeToken(TokenType.NEWLINE);
 			consumeToken(TokenType.DEDENT);			;
 		}else {
 			statements.add(Statement());

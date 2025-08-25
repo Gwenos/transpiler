@@ -21,13 +21,13 @@ elif 1>2 :
     bis()
 elif pas==inspi :
     tres()
+    quatro()
 else :
-    x=1
     x = x+x
-    caca(x)
-    mou()
     if x==1:
         coco()
+if eva==caca:
+    faux()
 
 # if (1>2): test()
 # elif (2>1): en()
