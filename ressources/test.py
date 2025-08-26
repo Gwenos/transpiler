@@ -16,14 +16,6 @@ if 1 + 1 == 5 :
     fonctionCall()
 if 1 + 1 == 4 : fonctionCall()
 
-
-
-
-
-
-
-
-
 if a + b > 3 and not done:
     fonctionCall()
 elif 1>2 :
@@ -35,19 +27,6 @@ else :
     x = x+x
     if x==1:
         coco()
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 if eva==caca:
     faux()

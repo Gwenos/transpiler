@@ -21,9 +21,5 @@ public static void main(String[] args) {
 	}
 
 	LexicalAnalysis lexical_analysis = new LexicalAnalysis(source_file_content.toString());
-	String xxx = lexical_analysis.compile();
-
-//		SyntacticAnalysis syntactic_analysis = new SyntacticAnalysis();
-
-
+	lexical_analysis.compile();
 }
