@@ -3,7 +3,7 @@ import java.util.List;
 
 public class Tokenizer {
 
-	private final String regex_python_keywords = "(if|elif|else|for|print|def|or|and|not|while)\\b";
+	private final String regex_python_keywords = "(if|elif|else|for|print|def|or|and|not|while|return)\\b";
 	private final String regex_python_identifiers = "[a-zA-Z_][a-zA-Z0-9_]*";
 	private final String regex_python_literals = "\\d+(\\.\\d+)?|\"(\\\\.|[^\"\\\\])*\"|'(\\\\.|[^\"\\\\])*'";
 	private final String regex_python_boolean_literals = "(True|False|None)";

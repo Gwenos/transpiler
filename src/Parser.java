@@ -91,28 +91,43 @@ public class Parser {
 			consumeToken(TokenType.KEYWORD);
 			Node elifBoolExpr = BooleanExpression();
 			consumeToken(TokenType.COLON);
-			Node elifBlock = block();
-			orElses.add(new IfNode(elifBoolExpr, elifBlock, new ArrayList<>()));
+			orElses.add(new IfNode(elifBoolExpr, block(), new ArrayList<>()));
 		}
 		if(getCurrentToken().type==TokenType.KEYWORD && getCurrentToken().value.equals("else")){
 			consumeToken(TokenType.KEYWORD);
 			consumeToken(TokenType.COLON);
-			Node elseBloc = block();
-			orElses.add(new IfNode(new LiteralNode(""), elseBloc, new ArrayList<>()));
+			orElses.add(new IfNode(null, block(), new ArrayList<>()));
 		}
 		return new IfNode(ifBoolExpr, ifBlock, orElses);
 	}
 
-	// WHILE_STATEMENT -> 'while' EXPRESSION ':' BLOCK
+	// WHILE_STATEMENT -> 'while' BOOL_EXPR ':' BLOCK
 	public Node whileStatement(){
 		consumeToken(TokenType.KEYWORD);
-		return new WhileNode(BooleanExpression());
+		Node boolExpr = BooleanExpression();
+		consumeToken(TokenType.COLON);
+		Node block = block();
+		return new WhileNode(boolExpr, block);
 	}
+
+	// DEF_STATEMENT -> 'def' IDENTIFIER '(' PARAMS? ')' ':' BLOCK
 	public Node defStatement(){
-		return null;
+		consumeToken(TokenType.KEYWORD);
+		String identifier = getCurrentToken().value;
+		consumeToken(TokenType.IDENTIFIER);
+		consumeToken(TokenType.LPAREN);
+		Node args = args();
+		if(getCurrentToken().type==TokenType.RPAREN)consumeToken(TokenType.RPAREN);
+		consumeToken(TokenType.COLON);
+		Node block = block();
+		return new DefNode(identifier, args, block);
 	}
+
+	// RETURN_STATEMENT -> 'return' EXPRESSION
 	public Node returnStatement(){
-		return null;
+		consumeToken(TokenType.KEYWORD);
+		Node expression = Expression();
+		return new ReturnNode(expression);
 	}
 
 	//	ASSIGNMENT	->	IDENTIFIER	'='	EXPRESSION
@@ -261,15 +276,15 @@ public class Parser {
 		consumeToken(TokenType.LPAREN);
 		if(getCurrentToken().type == TokenType.RPAREN) {
 			consumeToken(TokenType.RPAREN);
-			return new FonctionCallNode(identifier, Args());
+			return new FonctionCallNode(identifier, args());
 		}else {
-			Node args = Args();
+			Node args = args();
 			return new FonctionCallNode(identifier, args);
 		}
 	}
 
 	//	ARGS	->	EXPRESSION (',' EXPRESSION)*
-	public Node Args(){
+	public Node args(){
 		Node left = Expression();
 		while (getCurrentToken().type == TokenType.COMMA){
 			consumeToken(TokenType.COMMA);

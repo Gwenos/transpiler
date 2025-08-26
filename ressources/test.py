@@ -15,6 +15,15 @@ fonctionCallOutExpression()
 if 1 + 1 == 5 :
     fonctionCall()
 if 1 + 1 == 4 : fonctionCall()
+
+
+
+
+
+
+
+
+
 if a + b > 3 and not done:
     fonctionCall()
 elif 1>2 :
@@ -26,8 +35,31 @@ else :
     x = x+x
     if x==1:
         coco()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if eva==caca:
     faux()
+
+while eva==belle:
+    eva()
+    gwen()
+
+def evaestbelle(caca, prout):
+    g = gwen()
+    e = eva()
+    return g+e
 
 # if (1>2): test()
 # elif (2>1): en()
