@@ -1,5 +1,8 @@
+package lexicalAnalysis;
+
 import java.util.ArrayList;
 import java.util.List;
+import util.Error;
 
 public class Tokenizer {
 
@@ -14,11 +17,11 @@ public class Tokenizer {
 
 	private boolean ignore = false;
 
-	public List<Token> tokenize(String content, String separator){
+	public List<Token> tokenize(String content){
 		int nb_ligne = 1;
 		List<Token> tokens = new ArrayList<>();
 
-		for (String line : content.split(separator)) {
+		for (String line : content.split("\n")) {
 			int pos = 0;
 			line = line.trim();
 

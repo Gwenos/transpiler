@@ -1,5 +1,9 @@
-import javax.lang.model.element.TypeElement;
-import java.beans.Expression;
+package syntacticAnalysis;
+
+import lexicalAnalysis.Token;
+import lexicalAnalysis.TokenType;
+import util.Error;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +12,7 @@ public class Parser {
 	private List<Token> tokens;
 	private int indexCurrentToken = 0;
 
-	private SymbolTable symbolTable = new SymbolTable();
+//	private SymbolTable symbolTable = new SymbolTable();
 
 	//==========Méthode utiles==========
 	public Token getCurrentToken(){

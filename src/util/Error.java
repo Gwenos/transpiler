@@ -1,3 +1,5 @@
+package util;
+
 public class Error {
 
 	public static void lexicalError(String line, String token, int nbline) {
