@@ -14,6 +14,7 @@ public class LexicalAnalysis {
 		String regex_python_separators = "\n";
 
 		//===========TOKENIZED================
+		//analyse lexical
 		Tokenizer tokenizer = new Tokenizer();
 		System.out.println("----------Tokenizer----------");
 		long start = System.currentTimeMillis();
@@ -25,6 +26,7 @@ public class LexicalAnalysis {
 //		}
 
 		//================PARSED================
+		//analyse syntaxique
 		System.out.println("----------Parser----------");
 		Parser parser = new Parser();
 		start = System.currentTimeMillis();

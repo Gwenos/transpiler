@@ -3,6 +3,63 @@ import java.util.List;
 public abstract class Node {
 }
 
+class ClassDeclarationNode extends Node {
+	private final Node modifiers;
+	private final String className;
+	private final Node extend;
+	private final List<Node> classMembers;
+	public ClassDeclarationNode (Node modifiers, String className, Node extend, List<Node> classMembers){
+		this.modifiers = modifiers;
+		this.className = className;
+		this.extend = extend;
+		this.classMembers = classMembers;
+	}
+	public String toString (){
+		StringBuilder sb = new StringBuilder();
+		sb.append(modifiers).append(" class ").append(className).append(" ").append(extend).append("{\n");
+		for (Node member : classMembers){
+			sb.append(member).append("\n");
+		}
+		sb.append("}\n");
+		return sb.toString();
+	}
+}
+
+class MethodDeclarationNode extends Node{
+	private final Node modifiers;
+	private final Node type;
+	private final String methodName;
+	private final Node params;
+	private final Node block;
+	public MethodDeclarationNode (Node modifiers, Node type, String methodName, Node params, Node block){
+		this.modifiers = modifiers;
+		this.type = type;
+		this.methodName = methodName;
+		this.params = params;
+		this.block = block;
+	}
+	public String toString (){
+		return modifiers + " " + type + " " + methodName + "(" + params + ")" + block;
+	}
+}
+
+class FieldDeclaration extends Node {
+	private final Node modifiers;
+	private final Node type;
+	private final String methodName;
+	private final Node expression;
+	public FieldDeclaration (Node modifiers, Node type, String methodName, Node expression){
+		this.modifiers = modifiers;
+		this.type = type;
+		this.methodName = methodName;
+		this.expression = expression;
+	}
+	public String toString (){
+		return modifiers + " " + type + " " + methodName + ((expression.toString().isEmpty()) ? "" : " " + expression) + ";";
+	}
+
+}
+
 //==========================EXPRESSION=================================
 
 class AssignmentNode extends Node{

@@ -37,21 +37,75 @@ public class Parser {
 		return program();
 	}
 
-	// PROGRAM -> STATEMENT*
+
+	// PROGRAM -> CLASS_DECLARATION*
 	public List<Node> program() {
-		List<Node> statements = new ArrayList<>();
-		while(!eof()){
-			Node statement = statement();
-			statements.add(statement);
+		List<Node> classes = new ArrayList<>();
+		while(!eof() && getCurrentToken().value.equals("class")){
+			classes.add(classDeclaration());
 		}
-		return statements;
+		return classes;
+	}
+
+	// CLASS_DECLARATION -> 'class' IDENTIFIER (EXTENDS)? '{' CLASS_MEMBER* '}'
+	public Node classDeclaration() {
+		consumeToken(TokenType.KEYWORD);
+		String className = getCurrentToken().value;
+		consumeToken(TokenType.TYPE);
+		Node extend = new LiteralNode("");
+		if(getCurrentToken().type == TokenType.KEYWORD){
+			extend = extend();
+		}
+		consumeToken(TokenType.LBRACE);
+		List<Node> classMembers = new ArrayList<>();
+		while (getCurrentToken().type != TokenType.RBRACE) {
+			classMembers.add(classMember());
+		}
+		return new ClassDeclarationNode(new LiteralNode(""), className, extend, classMembers);
+	}
+
+	// EXTENDS -> 'extends' IDENTIFIER
+	public Node extend() {
+		consumeToken(TokenType.KEYWORD);
+		return new LiteralNode(getCurrentToken().value);
+	}
+
+	// CLASS_MEMBER -> METHOD_DECLARATION | FIELD_DECLARATION
+	// METHOD_DECLARATION -> MODIFIERS? TYPE IDENTIFIER '(' PARAMS? ')' BLOCK
+	// FIELD_DECLARATION -> MODIFIERS? TYPE IDENTIFIER ('=' EXPRESSION)? ';'
+	public Node classMember() {
+		Node modifiers = new LiteralNode("");
+		if (getCurrentToken().type==TokenType.KEYWORD) {
+			modifiers = modifiers();
+		}
+		Node type = type();
+		String identifier = getCurrentToken().value;
+		consumeToken(TokenType.IDENTIFIER);
+		if(getCurrentToken().type==TokenType.LPAREN){ // METHOD_DECLARATION
+			consumeToken(TokenType.LPAREN);
+			Node params = new LiteralNode("");
+			if (getCurrentToken().type != TokenType.RPAREN){
+				params = params();
+			}
+			consumeToken(TokenType.RPAREN);
+			Node block = block();
+			return new MethodDeclarationNode(modifiers, type, identifier, params, block);
+
+		}else{ // FIELD_DECLARATION
+			Node expression = new LiteralNode("");
+			if (getCurrentToken().type==TokenType.ASSIGN){
+				consumeToken(TokenType.ASSIGN);
+				expression = expression();
+			}
+			consumeToken(TokenType.SEMICOLON);
+			return new FieldDeclaration(modifiers, type, identifier, expression);
+		}
 	}
 
 	// STATEMENT -> ASSIGNMENT ';'
 	// 				| EXPRESSION ';'
 	//				| IF_STATEMENT
 	//              | WHILE_STATEMENT
-	//              | DEF_STATEMENT
 	//              | RETURN_STATEMENT ';'
 	public Node statement() {
 		// ASSIGNEMENT
@@ -76,14 +130,15 @@ public class Parser {
 					Node returnStatement = returnStatement();
 					consumeToken(TokenType.SEMICOLON);
 					return returnStatement;
-				default:
-					return defStatement();
+//				default:
+//					return methodeDeclaration();
 			}
 		} else {
 			Token current = getCurrentToken();
 			Error.lexicalError(current.line, current.toString(), current.nb_ligne);
 			throw new RuntimeException("Erreur Statement: " + getCurrentToken());
 		}
+		return null;
 	}
 
 	// IF_STATEMENT -> 'if' '(' BOOL_EXPR ')' (BLOCK | STATEMENT)
@@ -136,7 +191,7 @@ public class Parser {
 	}
 
 	// DEF_STATEMENT -> MODIFIERS? TYPE IDENTIFIER '(' PARAMS? ')' BLOCK
-	public Node defStatement(){
+	public Node methodeDeclaration(){
 		Node modifiers = new LiteralNode("");
 		if(getCurrentToken().type==TokenType.KEYWORD){
 			modifiers = modifiers();

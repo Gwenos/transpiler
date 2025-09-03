@@ -3,7 +3,7 @@ import java.util.List;
 
 public class Tokenizer {
 
-	private final String regex_keywords = "(public|private|class|static|final|if|else|while|return|int|double)\\b";
+	private final String regex_keywords = "(public|private|class|extends|static|final|if|else|while|return|int|double)\\b";
 	private final String regex_identifiers = "[a-zA-Z_][a-zA-Z0-9_]*";
 	private final String regex_literals = "\\d+(\\.\\d+)?|\"(\\\\.|[^\"\\\\])*\"|'(\\\\.|[^\"\\\\])*'";
 	private final String regex_boolean_literals = "(True|False|None)";

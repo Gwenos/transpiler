@@ -12,13 +12,19 @@ Etape :
 
 
 ======================GRAMMAIRE===============================
-PROGRAM       -> STATEMENT*
+PROGRAM       -> CLASS_DECLARATION*
+CLASS_DECLARATION -> 'class' IDENTIFIER (EXTENDS)? '{' CLASS_MEMBER* '}'
+EXTENDS -> 'extends' IDENTIFIER
+CLASS_MEMBER -> METHOD_DECLARATION | FIELD_DECLARATION
+
+METHOD_DECLARATION -> MODIFIERS? TYPE IDENTIFIER '(' PARAMS? ')' BLOCK
+FIELD_DECLARATION -> MODIFIERS? TYPE IDENTIFIER ('=' EXPRESSION)? ';'
+
 
 STATEMENT     -> ASSIGNMENT ';'
                | EXPRESSION ';'
                | IF_STATEMENT
                | WHILE_STATEMENT
-               | DEF_STATEMENT
                | RETURN_STATEMENT ';'
 
 ASSIGNMENT    -> TYPE IDENTIFIER '=' EXPRESSION
@@ -29,7 +35,6 @@ IF_STATEMENT -> 'if' '(' BOOL_EXPR ')' (BLOCK | STATEMENT)
 WHILE_STATEMENT -> 'while' '(' BOOL_EXPR ')' (BLOCK | STATEMENT)
 
 
-DEF_STATEMENT -> MODIFIERS? TYPE IDENTIFIER '(' PARAMS? ')' BLOCK
 MODIFIERS -> ACCESS_MODIFIER? OTHER_MODIFIER*
 ACCESS_MODIFIER -> 'public' | 'protected' | 'private'
 OTHER_MODIFIER -> 'static' | 'final' | 'abstract' | 'synchronized' | 'native' | 'strictfp'
