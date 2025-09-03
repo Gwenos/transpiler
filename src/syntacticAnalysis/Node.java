@@ -78,21 +78,13 @@ class AssignmentNode extends Node{
 	public String toString(){return type + " " + identifier + " = " + value + ";";}
 }
 
-class ExpressionNode extends Node{
-	private final Node expression;
-	public ExpressionNode(Node expression){
-		this.expression = expression;
-	}
-	public String toString(){return expression + ";";}
-}
-
 class OperatorNode extends Node{
 	private final Node left;
 	private final String operator;
 	private final Node right;
-	public OperatorNode(Node left, String operaor, Node right){
+	public OperatorNode(Node left, String operator, Node right){
 		this.left = left;
-		this.operator = operaor;
+		this.operator = operator;
 		this.right = right;
 	}
 	public String toString(){return "(" + left + " " + operator + " " + right + ")";}
@@ -157,14 +149,6 @@ class IfNode extends Node{
 				str.append("else if(").append(ifnode.boolExpr).append(") ").append(ifnode.block);
 			}
 		}
-//		str.append("if (" + boolExpr + "){\n" + block+(orElse.isEmpty()?"":"\n"));
-//		for (int i = 0; i < orElse.size(); i++) {
-//			if(i==orElse.size()-1 && orElse.get(i).boolExpr==null){
-//				str.append("else {\n"+orElse.get(i).block);
-//			}else{
-//				str.append("else if (" + orElse.get(i).boolExpr +"){\n"+orElse.get(i).block+"\n");
-//			}
-//		}
 		return str.toString();
 	}
 }
@@ -179,22 +163,6 @@ class WhileNode extends Node{
 	public String toString(){return "while(" + bool_expr + ")" + block;}
 }
 
-class DefNode extends Node{
-	private final Node modifiers;
-	private final String identifier;
-	private final Node args;
-	private final Node block;
-	public DefNode(Node modifiers, String identifier, Node args, Node block){
-		this.modifiers = modifiers;
-		this.identifier = identifier;
-		this.args = args;
-		this.block = block;
-	}
-	public String toString(){
-		return modifiers + identifier + "("+args+")" + block;
-	}
-}
-
 class ReturnNode extends Node{
 	private final Node expression;
 	public ReturnNode(Node expression){
@@ -204,8 +172,6 @@ class ReturnNode extends Node{
 }
 
 //=======================================TYPE====================================
-//noeud terminaux
-
 class LiteralNode extends Node {
 	String value;
 	LiteralNode(String value) {

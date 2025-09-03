@@ -7,13 +7,13 @@ public class Token {
 	public TokenType type;
 	public String value;
 	public String line;
-	public int nb_ligne;
+	public int numLine;
 
-	public Token(TokenType type, String value, String line, int nb_ligne){
+	public Token(TokenType type, String value, String line, int numLine){
 		this.type = type;
 		this.value = value;
 		this.line = line;
-		this.nb_ligne = nb_ligne;
+		this.numLine = numLine;
 	}
 
 	public String toString(){

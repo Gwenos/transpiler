@@ -23,7 +23,7 @@ public class Parser {
 			indexCurrentToken++;
 		}else{
 			Token current = getCurrentToken();
-			Error.lexicalError(current.line, type + " consommé au lieu de "+current, current.nb_ligne);
+			Error.lexicalError(current.line, type + " consommé au lieu de "+current, current.numLine);
 			throw new RuntimeException(current.toString());
 		}
 	}
@@ -112,11 +112,11 @@ public class Parser {
 	//              | WHILE_STATEMENT
 	//              | RETURN_STATEMENT ';'
 	public Node statement() {
-		// ASSIGNEMENT
+		// ASSIGNMENT
 		if (getCurrentToken().type == TokenType.TYPE) {
-			Node assignement = assignement();
+			Node assignment = assignment();
 			consumeToken(TokenType.SEMICOLON);
-			return assignement;
+			return assignment;
 
 		// EXPRESSION
 		}else if(getCurrentToken().type == TokenType.IDENTIFIER || getCurrentToken().type == TokenType.BOOLEAN || getCurrentToken().type == TokenType.LPAREN){
@@ -134,13 +134,11 @@ public class Parser {
 					Node returnStatement = returnStatement();
 					consumeToken(TokenType.SEMICOLON);
 					return returnStatement;
-//				default:
-//					return methodeDeclaration();
 			}
 		} else {
 			Token current = getCurrentToken();
-			Error.lexicalError(current.line, current.toString(), current.nb_ligne);
-			throw new RuntimeException("Erreur Statement: " + getCurrentToken());
+			Error.lexicalError(current.line, current.toString(), current.numLine);
+			throw new RuntimeException("Statement error: " + getCurrentToken());
 		}
 		return null;
 	}
@@ -149,7 +147,7 @@ public class Parser {
 	// 					('else if' '(' BOOL_EXPR ')' (BLOCK | STATEMENT))*
 	//					('else' (BLOCK | STATEMENT))?
 	public Node ifStatement(){
-		List<IfNode> orElses = new ArrayList<>();
+		List<IfNode> orElse = new ArrayList<>();
 
 		consumeToken(TokenType.KEYWORD);
 		consumeToken(TokenType.LPAREN);
@@ -169,17 +167,17 @@ public class Parser {
 				Node elifBlock;
 				if(getCurrentToken().type == TokenType.LBRACE) elifBlock = block();
 				else elifBlock = statement();
-				orElses.add(new IfNode(elifBoolExpr, elifBlock, new ArrayList<>()));
+				orElse.add(new IfNode(elifBoolExpr, elifBlock, new ArrayList<>()));
 			}else{
 				consumeToken(TokenType.KEYWORD);
 				Node elseBlock;
 				if(getCurrentToken().type == TokenType.LBRACE) elseBlock = block();
 				else elseBlock = statement();
 
-				orElses.add(new IfNode(new LiteralNode(""), elseBlock, new ArrayList<>()));
+				orElse.add(new IfNode(new LiteralNode(""), elseBlock, new ArrayList<>()));
 			}
 		}
-		return new IfNode(ifBoolExpr, ifBlock, orElses);
+		return new IfNode(ifBoolExpr, ifBlock, orElse);
 	}
 
 	// WHILE_STATEMENT -> 'while' '(' BOOL_EXPR ')' (BLOCK | STATEMENT)
@@ -194,24 +192,6 @@ public class Parser {
 		return new WhileNode(boolExpr, block);
 	}
 
-	// DEF_STATEMENT -> MODIFIERS? TYPE IDENTIFIER '(' PARAMS? ')' BLOCK
-	public Node methodeDeclaration(){
-		Node modifiers = new LiteralNode("");
-		if(getCurrentToken().type==TokenType.KEYWORD){
-			modifiers = modifiers();
-		}
-		consumeToken(TokenType.TYPE);
-		String identifier = getCurrentToken().value;
-		consumeToken(TokenType.IDENTIFIER);
-		consumeToken(TokenType.LPAREN);
-		Node params = new LiteralNode("");
-		if(getCurrentToken().type==TokenType.TYPE) {
-			params = params();
-		}
-		consumeToken(TokenType.RPAREN);
-		Node block = block();
-		return new DefNode(modifiers, identifier, params, block);
-	}
 	// MODIFIERS -> ACCESS_MODIFIER? OTHER_MODIFIER*
 	Node modifiers(){
 		List<Node> nodes = new ArrayList<>();
@@ -266,7 +246,7 @@ public class Parser {
 	}
 
 	//	ASSIGNMENT -> TYPE IDENTIFIER '=' EXPRESSION
-	public Node assignement() {
+	public Node assignment() {
 		Node type = type();
 		String identifier = getCurrentToken().value;
 		consumeToken(TokenType.IDENTIFIER);
@@ -375,7 +355,7 @@ public class Parser {
 			}
 			case TokenType.IDENTIFIER : {
 				if(lookAhead(1).type == TokenType.LPAREN) {//FUNCTION_CALL
-					return fonctionCall();
+					return methodCall();
 				}else{
 					consumeToken(TokenType.IDENTIFIER);//IDENTIFIER
 					return new LiteralNode(currentToken.value);
@@ -386,14 +366,14 @@ public class Parser {
 				return expression();
 			}
 			default : {
-				Error.lexicalError(currentToken.line, currentToken.toString(), currentToken.nb_ligne);
+				Error.lexicalError(currentToken.line, currentToken.toString(), currentToken.numLine);
 				return new LiteralNode("");
 			}
 		}
 	}
 
 	//	FUNCTION_CALL -> IDENTIFIER '(' ARGS? ')'
-	public Node fonctionCall(){
+	public Node methodCall(){
 		String identifier = getCurrentToken().value;
 		consumeToken(TokenType.IDENTIFIER);
 		consumeToken(TokenType.LPAREN);
