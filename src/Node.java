@@ -1,23 +1,28 @@
 import java.util.List;
 
 public abstract class Node {
-	protected String toJava() {
-		return "JAVA";
-	}
 }
 
 //==========================EXPRESSION=================================
 
 class AssignmentNode extends Node{
+	private final String type;
 	private final String identifier;
 	private final Node value;
-	public AssignmentNode(String identifier, Node value){
+	public AssignmentNode(String type, String identifier, Node value){
+		this.type = type;
 		this.identifier = identifier;
 		this.value = value;
 	}
-	public String toString(){return identifier + ANSI.PURPLE + " = " + ANSI.RESET + value;}
-	@Override
-	public String toJava(){return "type " + identifier + " = " + value.toJava() + " ;";}
+	public String toString(){return type + " " + identifier + " = " + value + ";";}
+}
+
+class ExpressionNode extends Node{
+	private final Node expression;
+	public ExpressionNode(Node expression){
+		this.expression = expression;
+	}
+	public String toString(){return expression + ";";}
 }
 
 class OperatorNode extends Node{
@@ -29,9 +34,28 @@ class OperatorNode extends Node{
 		this.operator = operaor;
 		this.right = right;
 	}
-	public String toString(){return "(" + left + ANSI.PURPLE + " " + operator + " " + ANSI.RESET + right + ")";}
-	@Override
-	public String toJava(){return "(" + left.toJava() + " " + operator + " " + right.toJava() + ")";}
+	public String toString(){return "(" + left + " " + operator + " " + right + ")";}
+}
+
+class ConcatNode extends Node{
+	private final Node[] nodes;
+	public ConcatNode(Node[] nodes){
+		this.nodes = nodes;
+	}
+	public ConcatNode(List<Node> nodes){
+		this.nodes = new Node[nodes.size()];
+		for(int i=0; i<nodes.size(); i++){
+			this.nodes[i] = nodes.get(i);
+		}
+	}
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		for(Node n : nodes){
+			sb.append(n.toString());
+			sb.append(" ");
+		}
+		return sb.toString();
+	}
 }
 
 class ArgumentNode extends Node{
@@ -42,8 +66,6 @@ class ArgumentNode extends Node{
 		this.right = right;
 	}
 	public String toString(){return left + ANSI.PURPLE + ", " + ANSI.RESET + right;}
-	@Override
-	public String toJava(){return left.toJava() + ", " + right.toJava();}
 }
 
 class NotNode extends Node{
@@ -51,9 +73,8 @@ class NotNode extends Node{
 	public NotNode(Node expression){
 		this.expression = expression;
 	}
-	public String toString(){return ANSI.PURPLE + "not " + ANSI.RESET + expression;}
-	@Override
-	public String toJava(){return "!"+expression.toJava();}
+	public String toString(){return "!" + expression;}
+
 }
 
 class IfNode extends Node{
@@ -67,27 +88,22 @@ class IfNode extends Node{
 	}
 	public String toString(){
 		StringBuilder str = new StringBuilder();
-		str.append(ANSI.PURPLE + "if " + ANSI.RESET + boolExpr + " :\n    " + block+(orElse.isEmpty()?"":"\n"));
-		for (int i = 0; i < orElse.size(); i++) {
-			if(i==orElse.size()-1 && orElse.get(i).boolExpr==null){
-				str.append(ANSI.PURPLE + "else" + ANSI.RESET+" :\n    "+orElse.get(i).block);
-			}else{
-				str.append(ANSI.PURPLE + "elif " + ANSI.RESET + orElse.get(i).boolExpr +" :\n    "+orElse.get(i).block+"\n");
+		str.append("if (").append(boolExpr).append(") ").append(block);
+		for(IfNode ifnode : orElse){
+			if(ifnode.boolExpr.toString().isEmpty()){
+				str.append("else ").append(ifnode.block);
+			}else {
+				str.append("else if(").append(ifnode.boolExpr).append(") ").append(ifnode.block);
 			}
 		}
-		return str.toString();
-	}
-	@Override
-	public String toJava(){
-		StringBuilder str = new StringBuilder();
-		str.append("if (" + boolExpr.toJava() + ") {\n" + block.toJava()+"\n}");
-		for (int i = 0; i < orElse.size(); i++) {
-			if(i==orElse.size()-1 && orElse.get(i).boolExpr==null){
-				str.append("else"+" {\n    "+orElse.get(i).block.toJava()+"\n}");
-			}else{
-				str.append("else if (" + orElse.get(i).boolExpr.toJava() +") {\n    "+orElse.get(i).block.toJava()+"\n}");
-			}
-		}
+//		str.append("if (" + boolExpr + "){\n" + block+(orElse.isEmpty()?"":"\n"));
+//		for (int i = 0; i < orElse.size(); i++) {
+//			if(i==orElse.size()-1 && orElse.get(i).boolExpr==null){
+//				str.append("else {\n"+orElse.get(i).block);
+//			}else{
+//				str.append("else if (" + orElse.get(i).boolExpr +"){\n"+orElse.get(i).block+"\n");
+//			}
+//		}
 		return str.toString();
 	}
 }
@@ -99,26 +115,22 @@ class WhileNode extends Node{
 		this.bool_expr = bool_expr;
 		this.block = block;
 	}
-	public String toString(){return ANSI.PURPLE + "while " + ANSI.RESET + bool_expr + " :\n    " + block;}
-	@Override
-	public String toJava(){return "while (" + bool_expr.toJava() + ") {\n" + block.toJava() + "\n}";}
+	public String toString(){return "while(" + bool_expr + ")" + block;}
 }
 
 class DefNode extends Node{
+	private final Node modifiers;
 	private final String identifier;
 	private final Node args;
 	private final Node block;
-	public DefNode(String identifier, Node args, Node block){
+	public DefNode(Node modifiers, String identifier, Node args, Node block){
+		this.modifiers = modifiers;
 		this.identifier = identifier;
 		this.args = args;
 		this.block = block;
 	}
 	public String toString(){
-		return ANSI.PURPLE + "def " + ANSI.RESET + identifier + "("+args+") :\n    " + block;
-	}
-	@Override
-	public String toJava(){
-		return "public void " + identifier + "("+args.toJava()+") {\n" + block.toJava() + "\n}";
+		return modifiers + identifier + "("+args+")" + block;
 	}
 }
 
@@ -127,9 +139,7 @@ class ReturnNode extends Node{
 	public ReturnNode(Node expression){
 		this.expression = expression;
 	}
-	public String toString(){return ANSI.PURPLE + "return " + ANSI.RESET + expression;}
-	@Override
-	public String toJava(){return "return " + expression.toJava() + " ;";	}
+	public String toString(){return "return " + expression + ";";}
 }
 
 //=======================================TYPE====================================
@@ -140,19 +150,7 @@ class LiteralNode extends Node {
 	LiteralNode(String value) {
 		this.value = value;
 	}
-	public String toString() { return ANSI.CYAN + value + ANSI.RESET; }
-	@Override
-	public String toJava() { return value; }
-}
-
-class IdentifierNode extends Node {
-	String identifier;
-	IdentifierNode(String name) {
-		this.identifier = name;
-	}
-	public String toString() { return ANSI.CYAN + identifier + ANSI.RESET; }
-	@Override
-	public String toJava(){ return identifier;}
+	public String toString() { return value; }
 }
 
 class FonctionCallNode extends Node {
@@ -160,8 +158,6 @@ class FonctionCallNode extends Node {
 	Node args;
 	FonctionCallNode(String identifier, Node args) {this.identifier = identifier;this.args = args;}
 	public String toString() {return identifier+"("+args+")";}
-	@Override
-	public String toJava(){return identifier+"("+args.toJava()+") ;";}
 }
 
 class BlockNode extends Node{
@@ -170,18 +166,11 @@ class BlockNode extends Node{
 		this.statements = statements;
 	}
 	public String toString(){
-		StringBuilder str = new StringBuilder();
+		StringBuilder str = new StringBuilder("{\n");
 		for(Node statement : statements){
-			str.append(statement).append("\n    ");
+			str.append(statement).append("\n");
 		}
-		return str.toString().substring(0, str.length()-5);
-	}
-	@Override
-	public String toJava(){
-		StringBuilder str = new StringBuilder();
-		for(Node statement : statements){
-			str.append(statement.toJava()).append("\n    ");
-		}
-		return str.toString().substring(0, str.length()-5);
+		str.append("}");
+		return str.toString();
 	}
 }

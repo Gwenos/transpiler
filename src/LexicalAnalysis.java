@@ -16,17 +16,31 @@ public class LexicalAnalysis {
 		//===========TOKENIZED================
 		Tokenizer tokenizer = new Tokenizer();
 		System.out.println("----------Tokenizer----------");
+		long start = System.currentTimeMillis();
 		List<Token> tokens = tokenizer.tokenize(source_file_content, regex_python_separators);
+		long time = System.currentTimeMillis() - start;
+		System.out.println(tokens.size() + " tokens en [" + time + "ms]");
+//		for(Token token : tokens){
+//			System.out.println(token);
+//		}
 
 		//================PARSED================
 		System.out.println("----------Parser----------");
 		Parser parser = new Parser();
+		start = System.currentTimeMillis();
 		List<Node> nodes = parser.parse(tokens);
+		time = System.currentTimeMillis() - start;
+		System.out.println(nodes.size() + " nodes en [" + time + "ms]");
 		for(Node node : nodes){
 			System.out.println(node);
 		}
-		for(Node node : nodes){
-			System.out.println(node.toJava());
-		}
+//		for(Node node : nodes){
+//			System.out.println(node.toJava());
+//		}
+
+		//================TYPE CHECK================
+//		TypeChecker typeChecker = new TypeChecker();
+//		typeChecker.check();
+
 	}
 }

@@ -1,3 +1,4 @@
+import javax.lang.model.element.TypeElement;
 import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +8,9 @@ public class Parser {
 	private List<Token> tokens;
 	private int indexCurrentToken = 0;
 
-	//==========Méthode outils==========
+	private SymbolTable symbolTable = new SymbolTable();
+
+	//==========Méthode utiles==========
 	public Token getCurrentToken(){
 		return tokens.get(indexCurrentToken);
 	}
@@ -16,7 +19,7 @@ public class Parser {
 			indexCurrentToken++;
 		}else{
 			Token current = getCurrentToken();
-			Error.lexicalError(current.line, type + " consommé au lieu de "+current.toString(), current.nb_ligne);
+			Error.lexicalError(current.line, type + " consommé au lieu de "+current, current.nb_ligne);
 			throw new RuntimeException(current.toString());
 		}
 	}
@@ -31,117 +34,190 @@ public class Parser {
 
 	public List<Node> parse(List<Token> tokens) {
 		this.tokens = tokens;
-		return Program();
+		return program();
 	}
 
-	//	PROGRAM -> (STATEMENT NEWLINE)* EOF
-	public List<Node> Program() {
+	// PROGRAM -> STATEMENT*
+	public List<Node> program() {
 		List<Node> statements = new ArrayList<>();
 		while(!eof()){
-			Node statement = Statement();
-			while (getCurrentToken().type == TokenType.NEWLINE) consumeToken(TokenType.NEWLINE);	//lignes vides
+			Node statement = statement();
 			statements.add(statement);
 		}
 		return statements;
 	}
 
-	//	STATEMENT	->	ASSIGNMENT
-	//					| EXPRESSION
-	//                  | IF_STATEMENT
-	//                  | WHILE_STATEMENT
-	//                  | DEF_STATEMENT
-	//                  | RETURN_STATEMENT
-	public Node Statement() {
-		//Assignement
-		if (getCurrentToken().type == TokenType.IDENTIFIER || getCurrentToken().type == TokenType.LITERAL) {
-			if (lookAhead(1).type == TokenType.ASSIGN) {
-				return Assignement();
-			} else {
-				if(getCurrentToken().type == TokenType.RPAREN) consumeToken(TokenType.RPAREN);	//c.f méthode Factor
-				return Expression();
-			}
+	// STATEMENT -> ASSIGNMENT ';'
+	// 				| EXPRESSION ';'
+	//				| IF_STATEMENT
+	//              | WHILE_STATEMENT
+	//              | DEF_STATEMENT
+	//              | RETURN_STATEMENT ';'
+	public Node statement() {
+		// ASSIGNEMENT
+		if (getCurrentToken().type == TokenType.TYPE) {
+			Node assignement = assignement();
+			consumeToken(TokenType.SEMICOLON);
+			return assignement;
+
+		// EXPRESSION
+		}else if(getCurrentToken().type == TokenType.IDENTIFIER || getCurrentToken().type == TokenType.BOOLEAN || getCurrentToken().type == TokenType.LPAREN){
+			Node expression = expression();
+			consumeToken(TokenType.SEMICOLON);
+			return expression;
+
 		} else if (getCurrentToken().type == TokenType.KEYWORD) {
 			switch (getCurrentToken().value) {
 				case "if":
 					return ifStatement();
 				case "while":
 					return whileStatement();
-				case "def":
-					return defStatement();
 				case "return":
-					return returnStatement();
+					Node returnStatement = returnStatement();
+					consumeToken(TokenType.SEMICOLON);
+					return returnStatement;
+				default:
+					return defStatement();
 			}
-		} else if (getCurrentToken().type != TokenType.NEWLINE) {
+		} else {
 			Token current = getCurrentToken();
 			Error.lexicalError(current.line, current.toString(), current.nb_ligne);
 			throw new RuntimeException("Erreur Statement: " + getCurrentToken());
 		}
-		return null;
 	}
 
-	//	IF_STATEMENT  -> 'if' BOOLEXPR ':' BLOCK ('elif' BOOLEXPR ':' BLOCK)* ('else' ':' BOOLEXPR)?
+	// IF_STATEMENT -> 'if' '(' BOOL_EXPR ')' (BLOCK | STATEMENT)
+	// 					('else if' '(' BOOL_EXPR ')' (BLOCK | STATEMENT))*
+	//					('else' (BLOCK | STATEMENT))?
 	public Node ifStatement(){
 		List<IfNode> orElses = new ArrayList<>();
 
 		consumeToken(TokenType.KEYWORD);
-		Node ifBoolExpr = BooleanExpression();
-		consumeToken(TokenType.COLON);
-		Node ifBlock = block();
-		while (getCurrentToken().type==TokenType.KEYWORD && getCurrentToken().value.equals("elif")){
-			consumeToken(TokenType.KEYWORD);
-			Node elifBoolExpr = BooleanExpression();
-			consumeToken(TokenType.COLON);
-			orElses.add(new IfNode(elifBoolExpr, block(), new ArrayList<>()));
-		}
-		if(getCurrentToken().type==TokenType.KEYWORD && getCurrentToken().value.equals("else")){
-			consumeToken(TokenType.KEYWORD);
-			consumeToken(TokenType.COLON);
-			orElses.add(new IfNode(null, block(), new ArrayList<>()));
+		consumeToken(TokenType.LPAREN);
+		Node ifBoolExpr = booleanExpression();
+		consumeToken(TokenType.RPAREN);
+		Node ifBlock;
+		if(getCurrentToken().type == TokenType.LBRACE) ifBlock = block();
+		else ifBlock = statement();
+
+		while (getCurrentToken().value.equals("else")){
+			if(lookAhead(1).value.equals("if")) {
+				consumeToken(TokenType.KEYWORD);
+				consumeToken(TokenType.KEYWORD);
+				consumeToken(TokenType.LPAREN);
+				Node elifBoolExpr = booleanExpression();
+				consumeToken(TokenType.RPAREN);
+				Node elifBlock;
+				if(getCurrentToken().type == TokenType.LBRACE) elifBlock = block();
+				else elifBlock = statement();
+				orElses.add(new IfNode(elifBoolExpr, elifBlock, new ArrayList<>()));
+			}else{
+				consumeToken(TokenType.KEYWORD);
+				Node elseBlock;
+				if(getCurrentToken().type == TokenType.LBRACE) elseBlock = block();
+				else elseBlock = statement();
+
+				orElses.add(new IfNode(new LiteralNode(""), elseBlock, new ArrayList<>()));
+			}
 		}
 		return new IfNode(ifBoolExpr, ifBlock, orElses);
 	}
 
-	// WHILE_STATEMENT -> 'while' BOOL_EXPR ':' BLOCK
+	// WHILE_STATEMENT -> 'while' '(' BOOL_EXPR ')' (BLOCK | STATEMENT)
 	public Node whileStatement(){
 		consumeToken(TokenType.KEYWORD);
-		Node boolExpr = BooleanExpression();
-		consumeToken(TokenType.COLON);
-		Node block = block();
+		consumeToken(TokenType.LPAREN);
+		Node boolExpr = booleanExpression();
+		consumeToken(TokenType.RPAREN);
+		Node block;
+		if(getCurrentToken().type == TokenType.LBRACE) block = block();
+		else block = statement();
 		return new WhileNode(boolExpr, block);
 	}
 
-	// DEF_STATEMENT -> 'def' IDENTIFIER '(' PARAMS? ')' ':' BLOCK
+	// DEF_STATEMENT -> MODIFIERS? TYPE IDENTIFIER '(' PARAMS? ')' BLOCK
 	public Node defStatement(){
-		consumeToken(TokenType.KEYWORD);
+		Node modifiers = new LiteralNode("");
+		if(getCurrentToken().type==TokenType.KEYWORD){
+			modifiers = modifiers();
+		}
+		consumeToken(TokenType.TYPE);
 		String identifier = getCurrentToken().value;
 		consumeToken(TokenType.IDENTIFIER);
 		consumeToken(TokenType.LPAREN);
-		Node args = args();
-		if(getCurrentToken().type==TokenType.RPAREN)consumeToken(TokenType.RPAREN);
-		consumeToken(TokenType.COLON);
+		Node params = new LiteralNode("");
+		if(getCurrentToken().type==TokenType.TYPE) {
+			params = params();
+		}
+		consumeToken(TokenType.RPAREN);
 		Node block = block();
-		return new DefNode(identifier, args, block);
+		return new DefNode(modifiers, identifier, params, block);
+	}
+	// MODIFIERS -> ACCESS_MODIFIER? OTHER_MODIFIER*
+	Node modifiers(){
+		List<Node> nodes = new ArrayList<>();
+		if (getCurrentToken().value.matches("(public|private)")) {
+			Node access = new LiteralNode(getCurrentToken().value);
+			consumeToken(TokenType.KEYWORD);
+			nodes.add(access);
+		}
+		while (getCurrentToken().type==TokenType.KEYWORD){
+			Node other = new LiteralNode(getCurrentToken().value);
+			consumeToken(TokenType.KEYWORD);
+			nodes.add(other);
+		}
+		return new ConcatNode(nodes);
+	}
+
+	// PARAMS -> TYPE IDENTIFIER (',' TYPE IDENTIFIER)*
+	public Node params(){
+		Node type = type();
+		Node identifier = new LiteralNode(getCurrentToken().value);
+		consumeToken(TokenType.IDENTIFIER);
+		Node left = new ConcatNode(new Node[]{type, identifier});
+		while (getCurrentToken().type==TokenType.COMMA) {
+			consumeToken(TokenType.COMMA);
+			Node type2 = type();
+			consumeToken(TokenType.TYPE);
+			Node identifier2 = new LiteralNode(getCurrentToken().value);
+			consumeToken(TokenType.IDENTIFIER);
+			Node right = new ConcatNode(new Node[]{type2, identifier2});
+			left = new OperatorNode(left, ",", right);
+		}
+		return left;
+	}
+
+	// TYPE -> TYPE ('[' ']')*
+	public Node type(){
+		List<Node> nodes = new ArrayList<>();
+		nodes.add(new LiteralNode(getCurrentToken().value));
+		consumeToken(TokenType.TYPE);
+		while (getCurrentToken().type==TokenType.LBRACKET) {
+			nodes.add(new LiteralNode("[]"));
+			consumeToken(TokenType.LBRACKET);
+			consumeToken(TokenType.RBRACKET);
+		}
+		return new ConcatNode(nodes);
 	}
 
 	// RETURN_STATEMENT -> 'return' EXPRESSION
 	public Node returnStatement(){
 		consumeToken(TokenType.KEYWORD);
-		Node expression = Expression();
-		return new ReturnNode(expression);
+		return new ReturnNode(expression());
 	}
 
-	//	ASSIGNMENT	->	IDENTIFIER	'='	EXPRESSION
-	public Node Assignement() {
+	//	ASSIGNMENT -> TYPE IDENTIFIER '=' EXPRESSION
+	public Node assignement() {
+		Node type = type();
 		String identifier = getCurrentToken().value;
 		consumeToken(TokenType.IDENTIFIER);
-		consumeToken(TokenType.ASSIGN);//	String operator = "=";
-		Node expression = Expression();
-		return new AssignmentNode(identifier, expression);
+		consumeToken(TokenType.ASSIGN);
+		Node expression = expression();
+		return new AssignmentNode(type.toString(), identifier, expression);
 	}
 
 	//	EXPRESSION	->	TERM (('+' | '-') TERM)*
-	public Node Expression() {
-
+	public Node expression() {
 		Node left = Term();
 		while(getCurrentToken().type == TokenType.OPERATOR && getCurrentToken().value.matches("[+-]")) {
 			String operator = getCurrentToken().value;
@@ -149,78 +225,66 @@ public class Parser {
 			Node right = Term();
 			left = new OperatorNode(left, operator, right);
 		}
-		if(getCurrentToken().type == TokenType.RPAREN) consumeToken(TokenType.RPAREN);	//c.f. méthode Factor
 		return left;
 	}
 
 	//	BOOL_EXPR -> OR_EXPR
-	public Node BooleanExpression(){
-		return OrExpression();
+	public Node booleanExpression(){
+		return orExpression();
 	}
 
-	//	OR_EXPR -> AND_EXPR ('or' AND_EXPR)*
-	public Node OrExpression(){
-		Node left = AndExpression();
-		while(getCurrentToken().type == TokenType.KEYWORD && getCurrentToken().value.equals("or")) {
-			consumeToken(TokenType.KEYWORD);
-			Node right = AndExpression();
-			left = new OperatorNode(left, "or", right);
+	//	OR_EXPR -> AND_EXPR ('||' AND_EXPR)*
+	public Node orExpression(){
+		Node left = andExpression();
+		while(getCurrentToken().value.equals("||")) {
+			consumeToken(TokenType.LOGICAL_OPERATOR);
+			Node right = andExpression();
+			left = new OperatorNode(left, "||", right);
 		}
 		return left;
 	}
 
 	//	AND_EXPR -> NOT_EXPR ('and' NOT_EXPR)*
-	public Node AndExpression(){
-		Node left = NotExpression();
-		while(getCurrentToken().type == TokenType.KEYWORD && getCurrentToken().value.equals("and")) {
-			consumeToken(TokenType.KEYWORD);
-			Node right = NotExpression();
-			left = new OperatorNode(left, "and", right);
+	public Node andExpression(){
+		Node left = notExpression();
+		while(getCurrentToken().value.equals("&&")) {
+			consumeToken(TokenType.LOGICAL_OPERATOR);
+			Node right = notExpression();
+			left = new OperatorNode(left, "&&", right);
 		}
 		return left;
 	}
 
 	//	NOT_EXPR -> 'not' NOT_EXPR | COMPARE
-	public Node NotExpression(){
-		if(getCurrentToken().type == TokenType.KEYWORD && getCurrentToken().value.equals("not")) {
-			consumeToken(TokenType.KEYWORD);
-			return new NotNode(NotExpression());
-		}else{
-			return Compare();
+	public Node notExpression(){
+		if(getCurrentToken().value.equals("!")) {
+			consumeToken(TokenType.LOGICAL_OPERATOR);
+			return new NotNode(notExpression());
 		}
+		return compare();
 	}
 
 	//	COMPARE -> EXPRESSION (COMPARE_OP EXPRESSION)?
-	public Node Compare(){
-		Node left = Expression();
+	public Node compare(){
+		Node left = expression();
 		if(getCurrentToken().type == TokenType.COMPARE_OPERATOR) {
 			String operator = getCurrentToken().value;
 			consumeToken(TokenType.COMPARE_OPERATOR);
-			Node right = Expression();
+			Node right = expression();
 			left = new OperatorNode(left, operator, right);
 		}
 		return left;
 	}
 
-	// BLOCK -> NEWLINE INDENT (STATEMENT NEWLINE+)+ DEDENT | STATEMENT
+	// BLOCK -> '{' STATEMENT* '}'
+
 	public Node block(){
 		List<Node> statements = new ArrayList<>();
-		if(getCurrentToken().type == TokenType.NEWLINE && lookAhead(1).type==TokenType.INDENT) {
-			consumeToken(TokenType.NEWLINE);
-			consumeToken(TokenType.INDENT);
-			statements.add(Statement());
-
-			while (getCurrentToken().type != TokenType.DEDENT) {
-				if (getCurrentToken().type == TokenType.NEWLINE) {
-					consumeToken(TokenType.NEWLINE);
-				} else {
-					statements.add(Statement());
-				}
-			}
-			consumeToken(TokenType.DEDENT);			;
-		}else {
-			statements.add(Statement());
+		consumeToken(TokenType.LBRACE);
+		while (getCurrentToken().type != TokenType.RBRACE) {
+			statements.add(statement());
 		}
+		consumeToken(TokenType.RBRACE);
 		return new BlockNode(statements);
 	}
 
@@ -237,61 +301,61 @@ public class Parser {
 		return left;
 	}
 
-	//	FACTOR	->	NUMBER
-	//              | STRING
-	//              | IDENTIFIER
-	//              | '(' EXPRESSION ')'
-	//				| FUNCTION_CALL
+// FACTOR -> LITERAL
+//          | IDENTIFIER
+//          | BOOLEAN
+//          | '(' EXPRESSION ')'
+//			| FUNCTION_CALL
 	public Node Factor() {
 		Token currentToken = getCurrentToken();
 
 		switch (currentToken.type) {
-			case TokenType.LITERAL : {//NUMBER | STRING
+			case TokenType.LITERAL : {// LITERAL
 				consumeToken(TokenType.LITERAL);
 				return new LiteralNode(currentToken.value);
 			}
 			case TokenType.IDENTIFIER : {
 				if(lookAhead(1).type == TokenType.LPAREN) {//FUNCTION_CALL
-					return FonctionCall();
+					return fonctionCall();
 				}else{
 					consumeToken(TokenType.IDENTIFIER);//IDENTIFIER
-					return new IdentifierNode(currentToken.value);
+					return new LiteralNode(currentToken.value);
 				}
 			}
 			case TokenType.LPAREN : {//'(' EXPRESSION ')'
 				consumeToken(TokenType.LPAREN);
-				return Expression();
+				return expression();
 			}
 			default : {
-//				Error.lexicalError(currentToken.line, currentToken.toString(), currentToken.nb_ligne);
+				Error.lexicalError(currentToken.line, currentToken.toString(), currentToken.nb_ligne);
 				return new LiteralNode("");
 			}
 		}
 	}
 
-	//	FUNCTION_CALL	->	IDENTIFIER '(' ARGS? ')'
-	public Node FonctionCall(){
+	//	FUNCTION_CALL -> IDENTIFIER '(' ARGS? ')'
+	public Node fonctionCall(){
 		String identifier = getCurrentToken().value;
 		consumeToken(TokenType.IDENTIFIER);
 		consumeToken(TokenType.LPAREN);
 		if(getCurrentToken().type == TokenType.RPAREN) {
 			consumeToken(TokenType.RPAREN);
-			return new FonctionCallNode(identifier, args());
+			return new FonctionCallNode(identifier, new LiteralNode(""));
 		}else {
 			Node args = args();
+			consumeToken(TokenType.RPAREN);
 			return new FonctionCallNode(identifier, args);
 		}
 	}
 
 	//	ARGS	->	EXPRESSION (',' EXPRESSION)*
 	public Node args(){
-		Node left = Expression();
+		Node left = expression();
 		while (getCurrentToken().type == TokenType.COMMA){
 			consumeToken(TokenType.COMMA);
-			Node right = Expression();
+			Node right = expression();
 			left = new ArgumentNode(left, right);
 		}
 		return left;
 	}
-
 }
