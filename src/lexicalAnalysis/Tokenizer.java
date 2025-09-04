@@ -20,6 +20,7 @@ public class Tokenizer {
 		List<Token> tokens = new ArrayList<>();
 
 		for (String line : content.split("\n")) {
+			numLine++;
 			int pos = 0;
 			line = line.trim();
 
@@ -127,7 +128,6 @@ public class Tokenizer {
 				}
 
 			}
-			numLine++;
 		}
 		tokens.add(new Token(TokenType.EOF, "", "", numLine));
 		return tokens;

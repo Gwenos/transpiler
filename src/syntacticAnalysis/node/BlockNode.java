@@ -1,0 +1,18 @@
+package syntacticAnalysis.node;
+
+import java.util.List;
+
+public class BlockNode extends Node {
+	public List<Node> statements;
+	public BlockNode(List<Node> statements){
+		this.statements = statements;
+	}
+	public String toString(){
+		StringBuilder str = new StringBuilder("{\n");
+		for(Node statement : statements){
+			str.append(statement).append("\n");
+		}
+		str.append("}");
+		return str.toString();
+	}
+}

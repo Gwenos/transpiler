@@ -1,6 +1,7 @@
 import lexicalAnalysis.Token;
 import lexicalAnalysis.Tokenizer;
-import syntacticAnalysis.Node;
+import semanticAnalysis.Analyser;
+import syntacticAnalysis.node.Node;
 import syntacticAnalysis.Parser;
 
 import java.io.File;
@@ -42,14 +43,17 @@ public static void main(String[] args) {
 	start = System.currentTimeMillis();
 	List<Node> nodes = parser.parse(tokens);
 	time = System.currentTimeMillis() - start;
-	System.out.println(nodes.size() + " nodes en [" + time + "ms]");
-	for(Node node : nodes){
-		System.out.println(node);
-	}
+	System.out.println("Parser en [" + time + "ms]");
+//	for(Node node : nodes){
+//		System.out.println(node);
+//	}
 
 	//================ANALYSE SEMANTIQUE================
-//		TypeChecker typeChecker = new TypeChecker();
-//		typeChecker.check();
-
+	System.out.println("----------semanticalAnalysis.Analyser----------");
+	Analyser analyser = new Analyser();
+	start = System.currentTimeMillis();
+	analyser.analyse(nodes.getFirst());
+	time = System.currentTimeMillis() - start;
+	System.out.println("Analyser en [" + time + "ms]");
 
 }

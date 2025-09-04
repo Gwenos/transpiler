@@ -12,12 +12,9 @@ public enum TokenType {
 	COMPARE_OPERATOR,	// == != < <= > >=
 	LOGICAL_OPERATOR,	// && || !
 
-	LPAREN,	//(
-	RPAREN,	//)
-	LBRACE, //{
-	RBRACE, //}
-	LBRACKET, //[
-	RBRACKET, //]
+	LPAREN,	RPAREN,	// ()
+	LBRACE, RBRACE, // {}
+	LBRACKET, RBRACKET, // []
 	COLON,	//:
 	COMMA,	//,
 	SEMICOLON, //;

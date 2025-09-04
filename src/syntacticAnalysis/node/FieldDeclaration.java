@@ -1,0 +1,18 @@
+package syntacticAnalysis.node;
+
+public class FieldDeclaration extends Node {
+	private final Node modifiers;
+	public final Node type;
+	public final String fieldName;
+	public final Node expression;
+	public FieldDeclaration (Node modifiers, Node type, String fieldName, Node expression){
+		this.modifiers = modifiers;
+		this.type = type;
+		this.fieldName = fieldName;
+		this.expression = expression;
+	}
+	public String toString (){
+		return modifiers + " " + type + " " + fieldName + ((expression.toString().isEmpty()) ? "" : " = " + expression) + ";";
+	}
+
+}
