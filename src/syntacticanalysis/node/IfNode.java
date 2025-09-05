@@ -1,4 +1,4 @@
-package syntacticAnalysis.node;
+package syntacticanalysis.node;
 
 import java.util.List;
 
@@ -6,7 +6,8 @@ public class IfNode extends Node {
 	public final ExpressionNode boolExpr;
 	public final Node block;
 	public final List<IfNode> orElse;
-	public IfNode(ExpressionNode boolExpr, Node block, List<IfNode> orElse){
+	public IfNode(int numLine, ExpressionNode boolExpr, Node block, List<IfNode> orElse){
+		super(numLine);
 		this.boolExpr = boolExpr;
 		this.block = block;
 		this.orElse = orElse;

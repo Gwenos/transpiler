@@ -1,4 +1,4 @@
-package lexicalAnalysis;
+package lexicalanalysis;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ public class Tokenizer {
 		final String regex_logical_operators = "&&|\\|\\||!";
 		final String regex_type = "\\b(?:int|double|boolean|void|[A-Z][a-zA-Z0-9_]*)\\b";
 
-		int numLine = 1;
+		int numLine = 0;
 		List<Token> tokens = new ArrayList<>();
 
 		for (String line : content.split("\n")) {
@@ -85,7 +85,7 @@ public class Tokenizer {
 						if(c_str.equals("=")){
 							tokens.add(new Token(TokenType.ASSIGN, c_str, line, numLine));
 						}else{
-							if(c_str.matches(regex_compare_operators)) tokens.add(new Token(TokenType.COMPARE_OPERATOR, c_str, line, numLine));
+							if (c_str.matches(regex_compare_operators)) tokens.add(new Token(TokenType.COMPARE_OPERATOR, c_str, line, numLine));
 							else tokens.add(new Token(TokenType.LOGICAL_OPERATOR, c_str, line, numLine));
 						}
 					}
@@ -123,7 +123,7 @@ public class Tokenizer {
 				}else if(Character.isWhitespace(c)){//ignoré
 					pos++;
 				}else{
-					Error.lexicalError(line, String.valueOf(c), numLine);
+					Error.lexicalError(numLine, String.valueOf(c));
 					pos++;
 				}
 

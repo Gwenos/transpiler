@@ -1,4 +1,4 @@
-package semanticAnalysis;
+package semanticanalysis;
 
 public class Symbol {
 	public final String variable;

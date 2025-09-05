@@ -1,11 +1,12 @@
-package syntacticAnalysis.node;
+package syntacticanalysis.node;
 
 public class FieldDeclaration extends Node {
 	private final Node modifiers;
 	public final Node type;
 	public final String fieldName;
 	public final Node expression;
-	public FieldDeclaration (Node modifiers, Node type, String fieldName, Node expression){
+	public FieldDeclaration (int numLine, Node modifiers, Node type, String fieldName, Node expression){
+		super(numLine);
 		this.modifiers = modifiers;
 		this.type = type;
 		this.fieldName = fieldName;

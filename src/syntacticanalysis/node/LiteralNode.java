@@ -1,4 +1,4 @@
-package syntacticAnalysis.node;
+package syntacticanalysis.node;
 
 //=======================================TYPE====================================
 public class LiteralNode extends ExpressionNode {
@@ -10,8 +10,8 @@ public class LiteralNode extends ExpressionNode {
 
 	public String lexeme;
 	public String type;
-	public LiteralNode(String lexeme) {
-		super("Literal");
+	public LiteralNode(int numLine, String lexeme) {
+		super(numLine,"Literal");
 		this.lexeme = lexeme;
 		this.type = lexeme.matches(regexBoolean) ? "boolean" :
 						lexeme.matches(regexString) ? "String" :

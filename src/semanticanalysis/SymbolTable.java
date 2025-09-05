@@ -1,4 +1,4 @@
-package semanticAnalysis;
+package semanticanalysis;
 
 import util.Error;
 
@@ -23,22 +23,22 @@ public class SymbolTable {
 		symbols.pop();
 	}
 
-	public void declare(String variable, String type) {
+	public void declare(int numLine, String variable, String type) {
 		Map<String, Symbol> current = symbols.peek();
-		assert current != null;
 		if (current.containsKey(variable)) {
-			Error.semanticError("Variable " + variable + " already declared");
+			Error.semanticError(numLine, "Variable " + variable + " already declared");
+		}else{
+			current.put(variable, new Symbol(variable, type));
 		}
-		current.put(variable, new Symbol(variable, type));
 	}
 
-	public Symbol lookup(String variable) {
+	public Symbol lookup(int numLine, String variable) {
 		for(Map<String, Symbol> current : symbols) {
 			if (current.containsKey(variable)) {
 				return current.get(variable);
 			}
 		}
-		Error.semanticError("Undeclared identifier: " + variable);
+		Error.semanticError(numLine, "Undeclared identifier: " + variable);
 		return null;
 	}
 

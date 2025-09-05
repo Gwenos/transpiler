@@ -1,12 +1,12 @@
-package syntacticAnalysis.node;
+package syntacticanalysis.node;
 
 import java.util.List;
 
-public class FonctionCallNode extends ExpressionNode {
+public class MethodCallNode extends ExpressionNode {
 	public String identifier;
 	public List<Node> args;
-	public FonctionCallNode(String identifier, List<Node> args) {
-		super("fonction");
+	public MethodCallNode(int numLine, String identifier, List<Node> args) {
+		super(numLine, "fonction");
 		this.identifier = identifier;
 		this.args = args;
 	}

@@ -1,4 +1,4 @@
-package syntacticAnalysis.node;
+package syntacticanalysis.node;
 
 import java.util.List;
 
@@ -8,7 +8,8 @@ public class MethodDeclarationNode extends Node {
 	public final String methodName;
 	public final List<Node> params;
 	public final Node block;
-	public MethodDeclarationNode (Node modifiers, Node type, String methodName, List<Node> params, Node block){
+	public MethodDeclarationNode (int numLine, Node modifiers, Node type, String methodName, List<Node> params, Node block){
+		super(numLine);
 		this.modifiers = modifiers;
 		this.type = type;
 		this.methodName = methodName;

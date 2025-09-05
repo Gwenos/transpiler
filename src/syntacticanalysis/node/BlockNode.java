@@ -1,10 +1,11 @@
-package syntacticAnalysis.node;
+package syntacticanalysis.node;
 
 import java.util.List;
 
 public class BlockNode extends Node {
 	public List<Node> statements;
-	public BlockNode(List<Node> statements){
+	public BlockNode(int numLine, List<Node> statements){
+		super(numLine);
 		this.statements = statements;
 	}
 	public String toString(){

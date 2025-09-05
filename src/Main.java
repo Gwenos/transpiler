@@ -1,15 +1,13 @@
-import lexicalAnalysis.Token;
-import lexicalAnalysis.Tokenizer;
-import semanticAnalysis.Analyser;
-import semanticAnalysis.Symbol;
-import semanticAnalysis.SymbolTable;
-import syntacticAnalysis.node.Node;
-import syntacticAnalysis.Parser;
+import lexicalanalysis.Token;
+import lexicalanalysis.Tokenizer;
+import semanticanalysis.Analyser;
+import semanticanalysis.SymbolTable;
+import syntacticanalysis.node.Node;
+import syntacticanalysis.Parser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 
 public static void main(String[] args) {
