@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class SymbolTable {
 
-	private final Deque<Map<String, Symbol>> symbols = new ArrayDeque<>();
+	public final Deque<Map<String, Symbol>> symbols = new ArrayDeque<>();
 
 	public SymbolTable(){
 		enterScope();
@@ -40,5 +40,14 @@ public class SymbolTable {
 		}
 		Error.semanticError("Undeclared identifier: " + variable);
 		return null;
+	}
+
+	public boolean exists(String variable) {
+		for(Map<String, Symbol> current : symbols) {
+			if (current.containsKey(variable)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

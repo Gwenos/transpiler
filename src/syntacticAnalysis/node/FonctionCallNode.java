@@ -2,10 +2,11 @@ package syntacticAnalysis.node;
 
 import java.util.List;
 
-public class FonctionCallNode extends Node {
+public class FonctionCallNode extends ExpressionNode {
 	public String identifier;
 	public List<Node> args;
 	public FonctionCallNode(String identifier, List<Node> args) {
+		super("fonction");
 		this.identifier = identifier;
 		this.args = args;
 	}

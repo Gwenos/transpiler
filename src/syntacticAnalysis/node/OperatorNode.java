@@ -1,13 +1,15 @@
 package syntacticAnalysis.node;
 
-public class OperatorNode extends Node {
-	public final Node left;
+public class OperatorNode extends ExpressionNode {
+	public final ExpressionNode left;
 	public final String operator;
-	public final Node right;
-	public OperatorNode(Node left, String operator, Node right){
+	public final ExpressionNode right;
+	public OperatorNode(ExpressionNode left, String operator, ExpressionNode right){
+		super("Operator");
 		this.left = left;
 		this.operator = operator;
 		this.right = right;
 	}
+
 	public String toString(){return "(" + left + " " + operator + " " + right + ")";}
 }

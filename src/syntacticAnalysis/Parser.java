@@ -156,7 +156,7 @@ public class Parser {
 
 		consumeToken(TokenType.KEYWORD);
 		consumeToken(TokenType.LPAREN);
-		Node ifBoolExpr = booleanExpression();
+		ExpressionNode ifBoolExpr = booleanExpression();
 		consumeToken(TokenType.RPAREN);
 		Node ifBlock;
 		if(getCurrentToken().type == TokenType.LBRACE) ifBlock = block();
@@ -167,7 +167,7 @@ public class Parser {
 				consumeToken(TokenType.KEYWORD);
 				consumeToken(TokenType.KEYWORD);
 				consumeToken(TokenType.LPAREN);
-				Node elifBoolExpr = booleanExpression();
+				ExpressionNode elifBoolExpr = booleanExpression();
 				consumeToken(TokenType.RPAREN);
 				Node elifBlock;
 				if(getCurrentToken().type == TokenType.LBRACE) elifBlock = block();
@@ -179,7 +179,7 @@ public class Parser {
 				if(getCurrentToken().type == TokenType.LBRACE) elseBlock = block();
 				else elseBlock = statement();
 
-				orElse.add(new IfNode(new EmptyNode(), elseBlock, new ArrayList<>()));
+				orElse.add(new IfNode(new LiteralNode(""), elseBlock, new ArrayList<>()));
 			}
 		}
 		return new IfNode(ifBoolExpr, ifBlock, orElse);
@@ -189,7 +189,7 @@ public class Parser {
 	public Node whileStatement(){
 		consumeToken(TokenType.KEYWORD);
 		consumeToken(TokenType.LPAREN);
-		Node boolExpr = booleanExpression();
+		ExpressionNode boolExpr = booleanExpression();
 		consumeToken(TokenType.RPAREN);
 		Node block;
 		if(getCurrentToken().type == TokenType.LBRACE) block = block();
@@ -249,46 +249,46 @@ public class Parser {
 	}
 
 	//	EXPRESSION	->	TERM (('+' | '-') TERM)*
-	public Node expression() {
-		Node left = Term();
-		while(getCurrentToken().type == TokenType.OPERATOR && getCurrentToken().value.matches("[+-]")) {
+	public ExpressionNode expression() {
+		ExpressionNode left = Term();
+		while(getCurrentToken().value.matches("[+-]")) {
 			String operator = getCurrentToken().value;
 			consumeToken(TokenType.OPERATOR);
-			Node right = Term();
+			ExpressionNode right = Term();
 			left = new OperatorNode(left, operator, right);
 		}
 		return left;
 	}
 
 	//	BOOL_EXPR -> OR_EXPR
-	public Node booleanExpression(){
+	public ExpressionNode booleanExpression(){
 		return orExpression();
 	}
 
 	//	OR_EXPR -> AND_EXPR ('||' AND_EXPR)*
-	public Node orExpression(){
-		Node left = andExpression();
+	public ExpressionNode orExpression(){
+		ExpressionNode left = andExpression();
 		while(getCurrentToken().value.equals("||")) {
 			consumeToken(TokenType.LOGICAL_OPERATOR);
-			Node right = andExpression();
+			ExpressionNode right = andExpression();
 			left = new OperatorNode(left, "||", right);
 		}
 		return left;
 	}
 
 	//	AND_EXPR -> NOT_EXPR ('and' NOT_EXPR)*
-	public Node andExpression(){
-		Node left = notExpression();
+	public ExpressionNode andExpression(){
+		ExpressionNode left = notExpression();
 		while(getCurrentToken().value.equals("&&")) {
 			consumeToken(TokenType.LOGICAL_OPERATOR);
-			Node right = notExpression();
+			ExpressionNode right = notExpression();
 			left = new OperatorNode(left, "&&", right);
 		}
 		return left;
 	}
 
 	//	NOT_EXPR -> 'not' NOT_EXPR | COMPARE
-	public Node notExpression(){
+	public ExpressionNode notExpression(){
 		if(getCurrentToken().value.equals("!")) {
 			consumeToken(TokenType.LOGICAL_OPERATOR);
 			return new NotNode(notExpression());
@@ -297,12 +297,12 @@ public class Parser {
 	}
 
 	//	COMPARE -> EXPRESSION (COMPARE_OP EXPRESSION)?
-	public Node compare(){
-		Node left = expression();
+	public ExpressionNode compare(){
+		ExpressionNode left = expression();
 		if(getCurrentToken().type == TokenType.COMPARE_OPERATOR) {
 			String operator = getCurrentToken().value;
 			consumeToken(TokenType.COMPARE_OPERATOR);
-			Node right = expression();
+			ExpressionNode right = expression();
 			left = new OperatorNode(left, operator, right);
 		}
 		return left;
@@ -322,12 +322,12 @@ public class Parser {
 
 
 	//	TERM	->	FACTOR (('*' | '/' | '%') FACTOR)*
-	public Node Term() {
-		Node left = Factor();
+	public ExpressionNode Term() {
+		ExpressionNode left = Factor();
 		while(getCurrentToken().type == TokenType.OPERATOR && getCurrentToken().value.matches("[*/%]")) {
 			String operator = getCurrentToken().value;
 			consumeToken(TokenType.OPERATOR);
-			Node right = Factor();
+			ExpressionNode right = Factor();
 			left = new OperatorNode(left, operator, right);
 		}
 		return left;
@@ -338,7 +338,7 @@ public class Parser {
 //          | BOOLEAN
 //          | '(' EXPRESSION ')'
 //			| FUNCTION_CALL
-	public Node Factor() {
+	public ExpressionNode Factor() {
 		Token currentToken = getCurrentToken();
 		switch (currentToken.type) {
 			case TokenType.LITERAL : {// LITERAL
@@ -357,9 +357,11 @@ public class Parser {
 				consumeToken(TokenType.LPAREN);
 				return expression();
 			}
-//			case TokenType.BOOLEAN : {
-//				System.out.println("ui");
-//			}
+			case TokenType.BOOLEAN : {
+				String bool = getCurrentToken().value;
+				consumeToken(TokenType.BOOLEAN);
+				return new BooleanNode(bool);
+			}
 			default : {
 				Error.syntacticError(currentToken.line, currentToken.toString(), currentToken.numLine);
 				throw new RuntimeException(currentToken.toString());
@@ -369,7 +371,7 @@ public class Parser {
 	}
 
 	//	FUNCTION_CALL -> IDENTIFIER '(' ARGS* ')'
-	public Node methodCall(){
+	public ExpressionNode methodCall(){
 		String identifier = getCurrentToken().value;
 		consumeToken(TokenType.IDENTIFIER);
 		consumeToken(TokenType.LPAREN);

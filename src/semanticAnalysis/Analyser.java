@@ -1,39 +1,30 @@
 package semanticAnalysis;
 
-import syntacticAnalysis.node.IdentifierNode;
-import syntacticAnalysis.node.NotNode;
-import syntacticAnalysis.node.OperatorNode;
-import syntacticAnalysis.node.WhileNode;
-import syntacticAnalysis.node.FonctionCallNode;
-import syntacticAnalysis.node.IfNode;
-import syntacticAnalysis.node.AssignmentNode;
-import syntacticAnalysis.node.ParameterNode;
-import syntacticAnalysis.node.LiteralNode;
-import syntacticAnalysis.node.ReturnNode;
-import syntacticAnalysis.node.BlockNode;
-import syntacticAnalysis.node.EmptyNode;
-import syntacticAnalysis.node.MethodDeclarationNode;
-import syntacticAnalysis.node.FieldDeclaration;
-import syntacticAnalysis.node.ClassDeclarationNode;
-import syntacticAnalysis.node.Node;
+import syntacticAnalysis.node.*;
+import util.Error;
 
 import java.util.List;
 
 public class Analyser {
 
-	private List<Node> nodes;
-	private SymbolTable symbolTable = new SymbolTable();
-	private String currentMethodType;
+	private final SymbolTable symbolTable = new SymbolTable();
+	private String currentMethodType = null;
 
-	public void analyse(Node node){
+	public SymbolTable analyse(List<Node> node){
+		for(Node n : node){
+			analyse(n);
+		}
+		return symbolTable;
+	}
 
+	public String analyse(Node node){
 
 		switch (node){
 
 			case ClassDeclarationNode cdn :
 				symbolTable.declare(cdn.className, "class");
-				for(Node member :cdn.classMembers){
-					analyse(member);
+				for(Node n : cdn.classMembers){
+					analyse(n);
 				}
 				break;
 
@@ -43,12 +34,13 @@ public class Analyser {
 
 			case MethodDeclarationNode mdn :
 				symbolTable.declare(mdn.methodName, mdn.type.toString());
-				symbolTable.enterScope();
 				currentMethodType = mdn.type.toString();
-				for(Node param : mdn.params){
-					analyse(param);
+				symbolTable.enterScope();
+				for(Node n : mdn.params){
+					analyse(n);
 				}
 				analyse(mdn.block);
+				symbolTable.exitScope();
 				break;
 
 			case ParameterNode pn :
@@ -56,14 +48,22 @@ public class Analyser {
 				break;
 
 			case AssignmentNode an :
-				symbolTable.declare(an.identifier, an.type);
+				boolean exist = symbolTable.exists(an.identifier);
+				analyse(an.value);
+				String realType = analyse(an.value);
+				if(!realType.equals(an.type)){
+					Error.semanticError("Type mysmatch '" + an.identifier + "' got " + realType + " instead of " + an.type);
+				} else if (!exist) {
+					symbolTable.declare(an.identifier, an.type);
+				}
 				break;
 
 			case IfNode in :
-				//est ce que la condition est booléenn
 				analyse(in.boolExpr);
+//				if(!in.boolExpr.equals("boolean")) Error.semanticError("Expected a boolean expression");
 				analyse(in.block);
-				for (Node n : in.orElse){
+
+				for(Node n : in.orElse){
 					analyse(n);
 				}
 				break;
@@ -75,45 +75,69 @@ public class Analyser {
 				break;
 
 			case ReturnNode rn :
-				//verifier le type de reour pour qu'il coincide avec le type de la méthode
-				analyse(rn.expression);
-				symbolTable.exitScope();
-				break;
+				//verifier le type de retour pour qu'il coincide avec le type de la méthode
 
-			case FonctionCallNode fcn :
-				symbolTable.lookup(fcn.identifier);
-				for(Node n : fcn.args){
-					analyse(n);
+				String returnType = analyse(rn.expression);
+
+				if(currentMethodType != null){
+					if(!returnType.equals(currentMethodType)){
+						Error.semanticError("return " + returnType + " instead of " + currentMethodType);
+					}else{
+						currentMethodType = null;
+					}
 				}
 				break;
 
+			case FonctionCallNode fcn :
+				Symbol s = symbolTable.lookup(fcn.identifier);
+				for(Node n : fcn.args){
+					analyse(n);
+				}
+				return s.type;
+
 			case WhileNode wn :
-				//verifier si boolexpr est boolén
+//				if(!wn.bool_expr.type.equals("boolean")) Error.semanticError("Expected a boolean expression");
 				analyse(wn.bool_expr);
 				analyse(wn.block);
 				break;
 
-			case OperatorNode on :
-				analyse(on.left);
-				analyse(on.right);
-				break;
-
 			case NotNode nn :
-				//verifeir boolen
+				if(!nn.expression.type.equals("boolean")) Error.semanticError("Expected a boolean expression");
 				analyse(nn.expression);
 				break;
 
+			case OperatorNode on :
+				String leftType = analyse(on.left);
+				String rightType = analyse(on.right);
+				String type = getType(leftType, rightType);
+				return type;
+
 			case IdentifierNode in :
+				Symbol symbol = symbolTable.lookup(in.value);
+				if(symbol != null){
+					return symbol.type;
+				}
 				break;
 
-			case LiteralNode ln :
-				break;
+			case LiteralNode ln:
+				return ln.type;
 
-			case EmptyNode en:
+			case BooleanNode _, EmptyNode _ :
 				break;
 
 			default :
 				throw new IllegalStateException("Unexpected value: " + node.getClass());
 		}
+		return "";
+	}
+
+	public String getType(String type1, String type2){
+		if(type1.equals(type2)){
+			return type1;
+		}
+		if((type1.equals("int") && type2.equals("double") || type1.equals("double") && type2.equals("int") )){
+			return "double";
+		}
+		return "unknown type";
 	}
 }

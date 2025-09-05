@@ -1,12 +1,15 @@
 import lexicalAnalysis.Token;
 import lexicalAnalysis.Tokenizer;
 import semanticAnalysis.Analyser;
+import semanticAnalysis.Symbol;
+import semanticAnalysis.SymbolTable;
 import syntacticAnalysis.node.Node;
 import syntacticAnalysis.Parser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public static void main(String[] args) {
@@ -52,8 +55,14 @@ public static void main(String[] args) {
 	System.out.println("----------semanticalAnalysis.Analyser----------");
 	Analyser analyser = new Analyser();
 	start = System.currentTimeMillis();
-	analyser.analyse(nodes.getFirst());
+	SymbolTable symbolTable = analyser.analyse(nodes);
 	time = System.currentTimeMillis() - start;
 	System.out.println("Analyser en [" + time + "ms]");
+//	for(Map<String, Symbol> x : symbolTable.symbols){
+//		for(Symbol s : x.values()){
+//			System.out.println(s.variable + " " + s.type);
+//		}
+//		System.out.println();
+//	}
 
 }

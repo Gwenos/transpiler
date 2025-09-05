@@ -1,21 +1,22 @@
 package syntacticAnalysis.node;
 
 //=======================================TYPE====================================
-public class LiteralNode extends Node {
+public class LiteralNode extends ExpressionNode {
 
 	private String regexBoolean = "(true|false)";
-	private String regexString = "\\d+(\\.\\d+)?|\"(\\\\.|[^\"\\\\])*\"|'(\\\\.|[^\"\\\\])*'";
+	private String regexString = "\"(\\\\.|[^\"\\\\])*\"|'(\\\\.|[^\"\\\\])*'";
 	private String regexInt = "-?\\d+";
 	private String regexDouble = "-?\\d+\\.\\d+";
 
-	String value;
-	String type;
-	public LiteralNode(String value) {
-		this.value = value;
-		this.type = value.matches(regexBoolean) ? "boolean" :
-						value.matches(regexString) ? "String" :
-							value.matches(regexInt) ? "int" :
-								value.matches(regexDouble) ? "double" : "UNKNOW";
+	public String lexeme;
+	public String type;
+	public LiteralNode(String lexeme) {
+		super("Literal");
+		this.lexeme = lexeme;
+		this.type = lexeme.matches(regexBoolean) ? "boolean" :
+						lexeme.matches(regexString) ? "String" :
+							lexeme.matches(regexInt) ? "int" :
+								lexeme.matches(regexDouble) ? "double" : "UNKNOW";
 	}
-	public String toString() { return value; }
+	public String toString() { return lexeme; }
 }

@@ -11,7 +11,7 @@ public class Error {
 	}
 
 	public static void semanticError(String message) {
-		System.out.println(ANSI.RED + " Semantic error >> " + ANSI.RESET + message);
+		System.out.println(ANSI.RED + "Semantic error >> " + ANSI.RESET + message);
 //		throw new RuntimeException(message);
 	}
 }

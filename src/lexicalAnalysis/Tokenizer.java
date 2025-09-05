@@ -10,7 +10,7 @@ public class Tokenizer {
 		final String regex_keywords = "(public|private|class|extends|static|final|if|else|while|return|int|double)\\b";
 		final String regex_identifiers = "[a-zA-Z_][a-zA-Z0-9_]*";
 		final String regex_literals = "\\d+(\\.\\d+)?|\"(\\\\.|[^\"\\\\])*\"|'(\\\\.|[^\"\\\\])*'";
-		final String regex_boolean_literals = "(True|False|None)";
+		final String regex_boolean_literals = "(true|false)";
 		final String regex_operators = "[+\\-/*%]";
 		final String regex_compare_operators = "(==|!=|<|<=|>|>=)";
 		final String regex_logical_operators = "&&|\\|\\||!";
