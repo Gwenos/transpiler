@@ -1,8 +1,8 @@
 package syntacticanalysis.node;
 
-public class EmptyNode extends Node {
+public class EmptyNode extends ExpressionNode {
 	public EmptyNode(int numLine) {
-		super(numLine);
+		super(numLine, "empty");
 	}
 
 	public String toString() {return "";}

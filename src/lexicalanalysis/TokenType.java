@@ -3,9 +3,12 @@ package lexicalanalysis;
 public enum TokenType {
 	KEYWORD,
 	IDENTIFIER,
-	LITERAL,
-	BOOLEAN,
 	TYPE,
+	STRING_LITERAL,
+	INT_LITERAL,
+	DOUBLE_LITERAL,
+	FLOAT_LITERAL,
+	BOOLEAN_LITERAL,
 
 	ASSIGN,	//=
 	OPERATOR,	//(+-/*%)

@@ -5,10 +5,8 @@ Etape :
     1.  Analyse lexical (regex)
     2.  Analyse syntaxique (ATS du langage sources)
     3.  Analyse sémantique (Type check)
-    4.  Transformation ATS source en ATS cible
+    4.  Génération du code intermédiaire
     5.  Génère code cible
-
-
 
 
 ======================GRAMMAIRE===============================
@@ -59,10 +57,8 @@ COMPARE       -> ADD_EXPR (COMPARE_OP ADD_EXPR)?
 COMPARE_OP    -> '==' | '!=' | '<' | '<=' | '>' | '>='
 
 TERM          -> FACTOR (('*' | '/' | '%') FACTOR)*
-FACTOR        -> NUMBER
-               | STRING
+FACTOR        -> LITERAL
                | IDENTIFIER
-               | BOOLEAN
                | '(' EXPRESSION ')'
                | FUNCTION_CALL
 
@@ -77,7 +73,3 @@ STRING        -> '"' ( [^"\n\\] | '\\' . )* '"'
                | '\'' ( [^'\n\\] | '\\' . )* '\''
 BOOLEAN       -> 'true' | 'false'
 DIGITS        -> [0-9]+
-
-
-======================ANALYSE SEMANTIQUE===============================
-

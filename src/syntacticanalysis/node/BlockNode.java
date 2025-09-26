@@ -9,11 +9,11 @@ public class BlockNode extends Node {
 		this.statements = statements;
 	}
 	public String toString(){
-		StringBuilder str = new StringBuilder("{\n");
+		StringBuilder str = new StringBuilder("BlockNode[\n");
 		for(Node statement : statements){
 			str.append(statement).append("\n");
 		}
-		str.append("}");
+		str.append("]");
 		return str.toString();
 	}
 }

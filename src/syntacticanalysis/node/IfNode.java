@@ -14,14 +14,11 @@ public class IfNode extends Node {
 	}
 	public String toString(){
 		StringBuilder str = new StringBuilder();
-		str.append("if (").append(boolExpr).append(") ").append(block);
+		str.append("IfNodes[ ").append(boolExpr).append("\n").append(block);
 		for(IfNode ifnode : orElse){
-			if(ifnode.boolExpr.toString().isEmpty()){
-				str.append("else ").append(ifnode.block);
-			}else {
-				str.append("else if(").append(ifnode.boolExpr).append(") ").append(ifnode.block);
-			}
+			str.append(ifnode.boolExpr).append("\n").append(ifnode.block);
 		}
+		str.append("]");
 		return str.toString();
 	}
 }

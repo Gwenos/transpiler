@@ -13,16 +13,13 @@ public class Parser {
 	private List<Token> tokens;
 	private int indexCurrentToken = 0;
 
-//	private semanticAnalysis.SymbolTable symbolTable = new semanticAnalysis.SymbolTable();
-
-	//==========Méthode utiles==========
+//=======================================================================================USEFUL METHODS=================
 	public Token getCurrentToken(){
 		return tokens.get(indexCurrentToken);
 	}
 	public void consumeToken(TokenType type){
-		if(getCurrentToken().type == type) {
-			indexCurrentToken++;
-		}else{
+		if(getCurrentToken().type == type) indexCurrentToken++;
+		else{
 			Token current = getCurrentToken();
 			Error.syntacticError(current.numLine, current + " expected, got " + type + " instead");
 			throw new RuntimeException(current.toString());
@@ -35,13 +32,12 @@ public class Parser {
 		return getCurrentToken().type == TokenType.EOF;
 	}
 
-	//==========Méthode de parse
+//=======================================================================================PARSER=========================
 
 	public List<Node> parse(List<Token> tokens) {
 		this.tokens = tokens;
 		return program();
 	}
-
 
 	// PROGRAM -> CLASS_DECLARATION*
 	public List<Node> program() {
@@ -76,6 +72,7 @@ public class Parser {
 		return new IdentifierNode(getCurrentToken().numLine, getCurrentToken().value);
 	}
 
+
 	// CLASS_MEMBER -> METHOD_DECLARATION | FIELD_DECLARATION
 	// METHOD_DECLARATION -> MODIFIERS? TYPE IDENTIFIER '(' PARAM* ')' BLOCK
 	// FIELD_DECLARATION -> MODIFIERS? TYPE IDENTIFIER ('=' EXPRESSION)? ';'
@@ -93,10 +90,10 @@ public class Parser {
 			consumeToken(TokenType.LPAREN);
 			List<Node> params = new ArrayList<>();
 			if(getCurrentToken().type != TokenType.RPAREN){
-				params.add(param());
+				params.add(parameter());
 				while (getCurrentToken().type == TokenType.COMMA) {
 					consumeToken(TokenType.COMMA);
-					params.add(param());
+					params.add(parameter());
 				}
 			}
 			consumeToken(TokenType.RPAREN);
@@ -128,7 +125,11 @@ public class Parser {
 			return assignment;
 
 		// EXPRESSION
-		}else if(getCurrentToken().type == TokenType.IDENTIFIER || getCurrentToken().type == TokenType.BOOLEAN || getCurrentToken().type == TokenType.LPAREN){
+		}else if(getCurrentToken().type == TokenType.IDENTIFIER ||
+				(getCurrentToken().type == TokenType.STRING_LITERAL || (getCurrentToken().type == TokenType.INT_LITERAL ||
+				(getCurrentToken().type == TokenType.DOUBLE_LITERAL ||  (getCurrentToken().type == TokenType.BOOLEAN_LITERAL ||
+				(getCurrentToken().type == TokenType.FLOAT_LITERAL ||
+				getCurrentToken().type == TokenType.LPAREN)))))){
 			Node expression = expression();
 			consumeToken(TokenType.SEMICOLON);
 			return expression;
@@ -185,7 +186,7 @@ public class Parser {
 				if(getCurrentToken().type == TokenType.LBRACE) elseBlock = block();
 				else elseBlock = statement();
 
-				orElse.add(new IfNode(numLine, new LiteralNode(numLine, ""), elseBlock, new ArrayList<>()));
+				orElse.add(new IfNode(numLine, new EmptyNode(numLine), elseBlock, new ArrayList<>()));
 			}
 		}
 		return new IfNode(numLine, ifBoolExpr, ifBlock, orElse);
@@ -205,7 +206,7 @@ public class Parser {
 	}
 
 	// MODIFIERS -> ACCESS_MODIFIER? OTHER_MODIFIER*
-	Node modifiers(){
+	public Node modifiers(){
 		StringBuilder str = new StringBuilder();
 		int numLine = getCurrentToken().numLine;
 		if (getCurrentToken().value.matches("(public|private)")) {
@@ -219,12 +220,12 @@ public class Parser {
 		return new IdentifierNode(numLine, str.toString());
 	}
 
-	// PARAM -> TYPE IDENTIFIER
-	public Node param(){
+	// PARAMETER -> TYPE IDENTIFIER
+	public Node parameter(){
 		int numLine = getCurrentToken().numLine;
 		Node type = type();
 		Node identifier = new IdentifierNode(numLine, getCurrentToken().value);
-		Node parameter = new ParameterNode(numLine, type, identifier);
+		Node parameter = new ParameterNode(numLine, type.toString(), identifier);
 		consumeToken(TokenType.IDENTIFIER);
 		return parameter;
 	}
@@ -257,6 +258,18 @@ public class Parser {
 		consumeToken(TokenType.ASSIGN);
 		Node expression = expression();
 		return new AssignmentNode(numLine, type.toString(), identifier, expression);
+	}
+
+	// BLOCK -> '{' STATEMENT* '}'
+	public Node block(){
+		int numLine = getCurrentToken().numLine;
+		List<Node> statements = new ArrayList<>();
+		consumeToken(TokenType.LBRACE);
+		while (getCurrentToken().type != TokenType.RBRACE) {
+			statements.add(statement());
+		}
+		consumeToken(TokenType.RBRACE);
+		return new BlockNode(numLine, statements);
 	}
 
 	//	EXPRESSION	->	TERM (('+' | '-') TERM)*
@@ -324,21 +337,7 @@ public class Parser {
 		return left;
 	}
 
-	// BLOCK -> '{' STATEMENT* '}'
-
-	public Node block(){
-		int numLine = getCurrentToken().numLine;
-		List<Node> statements = new ArrayList<>();
-		consumeToken(TokenType.LBRACE);
-		while (getCurrentToken().type != TokenType.RBRACE) {
-			statements.add(statement());
-		}
-		consumeToken(TokenType.RBRACE);
-		return new BlockNode(numLine, statements);
-	}
-
-
-	//	TERM	->	FACTOR (('*' | '/' | '%') FACTOR)*
+	// TERM -> FACTOR (('*' | '/' | '%') FACTOR)*
 	public ExpressionNode Term() {
 		int numLine = getCurrentToken().numLine;
 		ExpressionNode left = Factor();
@@ -351,19 +350,35 @@ public class Parser {
 		return left;
 	}
 
-// FACTOR -> LITERAL
-//          | IDENTIFIER
-//          | BOOLEAN
-//          | '(' EXPRESSION ')'
-//			| FUNCTION_CALL
+	// FACTOR -> LITERAL
+	//          | IDENTIFIER
+	//          | '(' EXPRESSION ')'
+	//			| FUNCTION_CALL
 	public ExpressionNode Factor() {
 		int numLine = getCurrentToken().numLine;
 		Token currentToken = getCurrentToken();
 		switch (currentToken.type) {
-			case TokenType.LITERAL : {// LITERAL
-				consumeToken(TokenType.LITERAL);
-				return new LiteralNode(numLine, currentToken.value);
+			case TokenType.STRING_LITERAL : {// LITERAL
+				consumeToken(TokenType.STRING_LITERAL);
+				return new LiteralNode(numLine, currentToken.value, "String");
 			}
+			case TokenType.INT_LITERAL : {// LITERAL
+				consumeToken(TokenType.INT_LITERAL);
+				return new LiteralNode(numLine, currentToken.value, "int");
+			}
+			case TokenType.DOUBLE_LITERAL : {// LITERAL
+				consumeToken(TokenType.DOUBLE_LITERAL);
+				return new LiteralNode(numLine, currentToken.value, "double");
+			}
+			case TokenType.FLOAT_LITERAL : {// LITERAL
+				consumeToken(TokenType.FLOAT_LITERAL);
+				return new LiteralNode(numLine, currentToken.value, "float");
+			}
+			case TokenType.BOOLEAN_LITERAL : {// LITERAL
+				consumeToken(TokenType.BOOLEAN_LITERAL);
+				return new LiteralNode(numLine, currentToken.value, "boolean");
+			}
+
 			case TokenType.IDENTIFIER : {
 				if(lookAhead(1).type == TokenType.LPAREN) {//FUNCTION_CALL
 					return methodCall();
@@ -372,15 +387,12 @@ public class Parser {
 					return new IdentifierNode(numLine, currentToken.value);
 				}
 			}
+
 			case TokenType.LPAREN : {//'(' EXPRESSION ')'
 				consumeToken(TokenType.LPAREN);
 				return expression();
 			}
-			case TokenType.BOOLEAN : {
-				String bool = getCurrentToken().value;
-				consumeToken(TokenType.BOOLEAN);
-				return new BooleanNode(numLine, bool);
-			}
+
 			default : {
 				Error.syntacticError(currentToken.numLine, currentToken.toString());
 				throw new RuntimeException(currentToken.toString());
@@ -389,32 +401,31 @@ public class Parser {
 		}
 	}
 
-	//	METHOD_CALL -> IDENTIFIER '(' ARGS* ')'
+	//	METHOD_CALL -> IDENTIFIER '(' ARGS? ')'
 	public ExpressionNode methodCall(){
 		int numLine = getCurrentToken().numLine;
 		String identifier = getCurrentToken().value;
 		consumeToken(TokenType.IDENTIFIER);
 		consumeToken(TokenType.LPAREN);
-		List<Node> args = new ArrayList<>();
+		List<Node> arguments = new ArrayList<>();
 		if(getCurrentToken().type == TokenType.RPAREN) {
 			consumeToken(TokenType.RPAREN);
-			return new MethodCallNode(numLine, identifier, args);
+			return new MethodCallNode(numLine, identifier, arguments);
 		}else {
-			if(getCurrentToken().type != TokenType.RPAREN) {
-				args.add(arg());
-				while (getCurrentToken().type==TokenType.COMMA) {
-					consumeToken(TokenType.COMMA);
-					args.add(arg());
-				}
+			arguments.add(argument());
+			while (getCurrentToken().type == TokenType.COMMA) {
+				consumeToken(TokenType.COMMA);
+				arguments.add(argument());
 			}
-
 			consumeToken(TokenType.RPAREN);
-			return new MethodCallNode(numLine, identifier, args);
+			return new MethodCallNode(numLine, identifier, arguments);
 		}
 	}
 
-	//	ARGS	->	EXPRESSION
-	public Node arg(){
-		return expression();
+	// ARGS -> EXPRESSION (',' EXPRESSION)*
+	public Node argument(){
+		int numLine = getCurrentToken().numLine;
+		ExpressionNode expression = expression();
+		return new ArgumentNode(numLine, expression);
 	}
 }

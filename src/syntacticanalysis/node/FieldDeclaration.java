@@ -13,7 +13,7 @@ public class FieldDeclaration extends Node {
 		this.expression = expression;
 	}
 	public String toString (){
-		return modifiers + " " + type + " " + fieldName + ((expression.toString().isEmpty()) ? "" : " = " + expression) + ";";
+		return "FieldDeclaration [" + type + " " + fieldName + ((expression.toString().isEmpty()) ? "" : " = " + expression + "]");
 	}
 
 }

@@ -1,5 +1,5 @@
+import lexicalanalysis.Lexer;
 import lexicalanalysis.Token;
-import lexicalanalysis.Tokenizer;
 import semanticanalysis.Analyser;
 import semanticanalysis.SymbolTable;
 import syntacticanalysis.node.Node;
@@ -28,15 +28,12 @@ public static void main(String[] args) {
 	}
 
 	//===========ANALYSE LEXICAL================
-	Tokenizer tokenizer = new Tokenizer();
-	System.out.println("----------lexicalAnalysis.Tokenizer----------");
+	Lexer lexer = new Lexer();
+	System.out.println("----------lexicalAnalysis.Lexer----------");
 	long start = System.currentTimeMillis();
-	List<Token> tokens = tokenizer.tokenize(source_file_content.toString());
+	List<Token> tokens = lexer.tokenize(source_file_content.toString());
 	long time = System.currentTimeMillis() - start;
 	System.out.println(tokens.size() + " tokens en [" + time + "ms]");
-//		for(lexicalAnalysis.Token token : tokens){
-//			System.out.println(token);
-//		}
 
 	//================ANALYSE SYNTAXIQUE================
 	System.out.println("----------syntacticAnalysis.Parser----------");
@@ -45,22 +42,12 @@ public static void main(String[] args) {
 	List<Node> nodes = parser.parse(tokens);
 	time = System.currentTimeMillis() - start;
 	System.out.println("Parser en [" + time + "ms]");
-//	for(Node node : nodes){
-//		System.out.println(node);
-//	}
 
 	//================ANALYSE SEMANTIQUE================
 	System.out.println("----------semanticalAnalysis.Analyser----------");
 	Analyser analyser = new Analyser();
 	start = System.currentTimeMillis();
-	SymbolTable symbolTable = analyser.analyse(nodes);
+	analyser.analyse(nodes);
 	time = System.currentTimeMillis() - start;
 	System.out.println("Analyser en [" + time + "ms]");
-//	for(Map<String, Symbol> x : symbolTable.symbols){
-//		for(Symbol s : x.values()){
-//			System.out.println(s.variable + " " + s.type);
-//		}
-//		System.out.println();
-//	}
-
 }

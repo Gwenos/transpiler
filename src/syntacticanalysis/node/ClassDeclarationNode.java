@@ -16,11 +16,11 @@ public class ClassDeclarationNode extends Node {
 	}
 	public String toString (){
 		StringBuilder sb = new StringBuilder();
-		sb.append(modifiers).append(" class ").append(className).append(" ").append(extend).append("{\n");
+		sb.append("ClassDeclarationNode ").append(className).append("[\n");
 		for (Node member : classMembers){
 			sb.append(member).append("\n");
 		}
-		sb.append("}\n");
+		sb.append("]");
 		return sb.toString();
 	}
 }

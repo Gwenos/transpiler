@@ -3,19 +3,18 @@ package semanticanalysis;
 import syntacticanalysis.node.*;
 import util.Error;
 
-import java.beans.Expression;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Analyser {
 
-	private final SymbolTable symbolTable = new SymbolTable();
+	private final SymbolTable SYMBOL_TABLE = new SymbolTable();
 	private String currentMethodType = null;
 
-	public SymbolTable analyse(List<Node> nodes){
+	public void analyse(List<Node> nodes){
 		for(Node node : nodes){
 			analyse(node);
 		}
-		return symbolTable;
 	}
 
 	public String analyse(Node node){
@@ -23,38 +22,39 @@ public class Analyser {
 		switch (node){
 
 			case ClassDeclarationNode classDeclaration :
-				this.symbolTable.declare(node.numLine, classDeclaration.className, "class");
+				this.SYMBOL_TABLE.declare(classDeclaration.numLine, classDeclaration.className, "class", new ArrayList<>());
 				for(Node n : classDeclaration.classMembers){
 					analyse(n);
 				}
 				break;
 
 			case FieldDeclaration fieldDeclaration:
-				this.symbolTable.declare(node.numLine, fieldDeclaration.fieldName, fieldDeclaration.type.toString());
+				this.SYMBOL_TABLE.declare(fieldDeclaration.numLine, fieldDeclaration.fieldName, fieldDeclaration.type.toString(), new ArrayList<>());
 				break;
 
 			case MethodDeclarationNode methodDeclaration :
-				//tu ne compares pas les types attendus vs donnés.
-				this.symbolTable.declare(node.numLine, methodDeclaration.methodName, methodDeclaration.type.toString());
-				this.currentMethodType = methodDeclaration.type.toString();
-				this.symbolTable.enterScope();
+				List<String> params = new ArrayList<>();
 				for(Node n : methodDeclaration.params){
-					analyse(n);
+					params.add(analyse(n));
 				}
+				this.SYMBOL_TABLE.declare(methodDeclaration.numLine, methodDeclaration.methodName, methodDeclaration.type.toString(), params);
+				this.currentMethodType = methodDeclaration.type.toString();
+
+				this.SYMBOL_TABLE.enterScope();
 				analyse(methodDeclaration.block);
-				this.symbolTable.exitScope();
+				this.SYMBOL_TABLE.exitScope();
 				break;
 
 			case ParameterNode parameter :
-				this.symbolTable.declare(node.numLine, parameter.identifier.toString(), parameter.type.toString());
-				break;
+				this.SYMBOL_TABLE.declare(parameter.numLine, parameter.identifier.toString(), parameter.type, new ArrayList<>());
+				return parameter.type;
 
-			case AssignmentNode assignement :
-				String realType = analyse(assignement.value);
-				if(!realType.equals(assignement.type)){
-					Error.semanticError(node.numLine, "Type mismatch '" + assignement.identifier + "' got " + realType + " instead of " + assignement.type);
+			case AssignmentNode assignment :
+				String realType = analyse(assignment.value);
+				if(!realType.equals(assignment.type)){
+					Error.semanticError(assignment.numLine, "Type mismatch '" + assignment.identifier + "' got " + realType + " instead of " + assignment.type);
 				}
-				this.symbolTable.declare(node.numLine, assignement.identifier, assignement.type);
+				this.SYMBOL_TABLE.declare(assignment.numLine, assignment.identifier, assignment.type, new ArrayList<>());
 				break;
 
 			case IfNode ifNode :
@@ -70,30 +70,38 @@ public class Analyser {
 				break;
 
 			case BlockNode block :
-				this.symbolTable.enterScope();
+				this.SYMBOL_TABLE.enterScope();
 				for(Node statement : block.statements){
 					analyse(statement);
 				}
-				this.symbolTable.exitScope();
+				this.SYMBOL_TABLE.exitScope();
 				break;
 
 			case ReturnNode returnNode :
 				String returnType = analyse(returnNode.expression);
-				if(this.currentMethodType != null){
-					if(!returnType.equals(this.currentMethodType)){
-						Error.semanticError(node.numLine, "return " + returnType + " instead of " + this.currentMethodType);
-					}else{
-						this.currentMethodType = null;
-					}
+				if(this.currentMethodType.equals("void")){
+					Error.semanticError(returnNode.numLine, "Return " + returnType + " in a void method");
+				}else if(!returnType.equals(this.currentMethodType)){
+					Error.semanticError(returnNode.numLine, "Return type mismatch, got " + returnType + " instead of " + this.currentMethodType);
 				}
+				this.currentMethodType = null;
 				break;
 
-			case MethodCallNode methodCall :
-				Symbol method = this.symbolTable.lookup(node.numLine, methodCall.identifier);
+			case MethodCallNode methodCall ://bon nombre et bon type des args
+				Symbol method = this.SYMBOL_TABLE.lookup(methodCall.numLine, methodCall.identifier);
+				List<String> argumentsTypes = new ArrayList<>();
 				for(Node arg : methodCall.args){
-					analyse(arg);
+					argumentsTypes.add(analyse(arg));
+				}
+				if(method.parametersTypes.size() != argumentsTypes.size()){
+					Error.semanticError(methodCall.numLine, "Method "+methodCall.identifier+" expect "+method.parametersTypes.size()+" arguments, "+argumentsTypes.size()+" was given");
+				}else if(!method.parametersTypes.equals(argumentsTypes)){
+					Error.semanticError(methodCall.numLine, "Method "+methodCall.identifier+" expect "+method.parametersTypes+", "+argumentsTypes+" given");
 				}
 				return method.type;
+
+			case ArgumentNode argument :
+				return analyse(argument.expression) ;
 
 			case WhileNode whileNode :
 				if(!analyse(whileNode.bool_expr).equals("boolean")) Error.semanticError(whileNode.numLine, "while expect a boolean expression");
@@ -115,7 +123,7 @@ public class Analyser {
 				return getType(operatorNode.numLine, leftType, operator, rightType);
 
 			case IdentifierNode identifierNode :
-				Symbol identifier = this.symbolTable.lookup(node.numLine, identifierNode.value);
+				Symbol identifier = this.SYMBOL_TABLE.lookup(identifierNode.numLine, identifierNode.value);
 				if(identifier != null){
 					return identifier.type;
 				}
@@ -123,9 +131,6 @@ public class Analyser {
 
 			case LiteralNode literal:
 				return literal.type;
-
-			case BooleanNode _:
-				return "boolean";
 
 			case EmptyNode _ :
 				return "empty";
@@ -139,12 +144,10 @@ public class Analyser {
 
 	public String getType(int numLine, String type1, String operator, String type2){
 		if(operator.matches("(==|!=|<|<=|>|>=|&&|\\|\\|)")){
-			if(type1.equals(type2)){
-				return "boolean";
-			}else {
+			if (!type1.equals(type2)) {
 				Error.semanticError(numLine, "Expected a boolean expression");
-				return "boolean";
 			}
+			return "boolean";
 		}
 		if(type1.equals(type2)){
 			return type1;
@@ -152,6 +155,8 @@ public class Analyser {
 		if((type1.equals("int") && type2.equals("double") || type1.equals("double") && type2.equals("int") )){
 			return "double";
 		}
+
+//		float x = 1.1;
 
 		return "unknown type";
 	}

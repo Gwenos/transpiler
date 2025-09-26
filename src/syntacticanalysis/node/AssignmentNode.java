@@ -10,5 +10,5 @@ public class AssignmentNode extends Node {
 		this.identifier = identifier;
 		this.value = value;
 	}
-	public String toString(){return type + " " + identifier + " = " + value + ";";}
+	public String toString(){return "AssignmentNode[" + type + " " + identifier + " = " + value + "]";}
 }

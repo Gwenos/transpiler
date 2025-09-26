@@ -11,13 +11,6 @@ public class MethodCallNode extends ExpressionNode {
 		this.args = args;
 	}
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(identifier).append("(");
-		for (Node n : args) {
-			sb.append(n.toString()).append(",");
-		}
-		sb = new StringBuilder(sb.substring(0, sb.length() - 1));
-		sb.append(")");
-		return sb.toString();
+		return identifier + "(" + args + ")";
 	}
 }

@@ -1,18 +1,16 @@
 class Test {
 	private static int x;
-
 	private final String str = "caca";
-
 	public static int f(int a, int b){
 		return 1;
 	}
-
 	public static void main(String[] args) {
 //		commentaire
 //				commentaire
 		int a = 5;
 		// a = 6;
 		double b = 2.3;
+		float flo = 2.3f;
 		String str = "hello";
 		String c = str + str;
 		double d = a + b;

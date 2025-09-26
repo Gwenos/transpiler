@@ -1,10 +1,14 @@
 package semanticanalysis;
 
+import java.util.List;
+
 public class Symbol {
-	public final String variable;
-	public final String type;
-	public Symbol(String variable, String type) {
+	public String variable;
+	public String type;
+	public List<String> parametersTypes;
+	public Symbol(String variable, String type, List<String> parametersTypes) {
 		this.variable = variable;
 		this.type = type;
+		this.parametersTypes = parametersTypes;
 	}
 }
