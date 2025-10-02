@@ -6,7 +6,7 @@ class Test {
 	}
 	public static void main(String[] args) {
 //		commentaire
-//				commentaire
+				//commentaire
 		int a = 5;
 		// a = 6;
 		double b = 2.3;

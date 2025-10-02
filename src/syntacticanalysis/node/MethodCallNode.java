@@ -2,7 +2,7 @@ package syntacticanalysis.node;
 
 import java.util.List;
 
-public class MethodCallNode extends ExpressionNode {
+public class MethodCallNode extends TypedNode {
 	public String identifier;
 	public List<Node> args;
 	public MethodCallNode(int numLine, String identifier, List<Node> args) {

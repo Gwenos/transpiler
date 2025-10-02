@@ -3,7 +3,7 @@ package syntacticanalysis.node;
 import lexicalanalysis.TokenType;
 
 //=======================================TYPE====================================
-public class LiteralNode extends ExpressionNode {
+public class LiteralNode extends TypedNode {
 
 	private String regexBoolean = "(true|false)";
 	private String regexString = "\"(\\\\.|[^\"\\\\])*\"|'(\\\\.|[^\"\\\\])*'";

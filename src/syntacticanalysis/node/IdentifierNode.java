@@ -1,6 +1,6 @@
 package syntacticanalysis.node;
 
-public class IdentifierNode extends ExpressionNode {
+public class IdentifierNode extends TypedNode {
 	public String value;
 	public IdentifierNode(int numLine, String value) {
 		super(numLine,"Identifier");

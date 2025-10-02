@@ -1,6 +1,6 @@
 package syntacticanalysis.node;
 
-public class EmptyNode extends ExpressionNode {
+public class EmptyNode extends TypedNode {
 	public EmptyNode(int numLine) {
 		super(numLine, "empty");
 	}

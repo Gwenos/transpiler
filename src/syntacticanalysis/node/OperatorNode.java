@@ -1,10 +1,10 @@
 package syntacticanalysis.node;
 
-public class OperatorNode extends ExpressionNode {
-	public final ExpressionNode left;
+public class OperatorNode extends TypedNode {
+	public final TypedNode left;
 	public final String operator;
-	public final ExpressionNode right;
-	public OperatorNode(int numLine, ExpressionNode left, String operator, ExpressionNode right){
+	public final TypedNode right;
+	public OperatorNode(int numLine, TypedNode left, String operator, TypedNode right){
 		super(numLine,"Operator");
 		this.left = left;
 		this.operator = operator;

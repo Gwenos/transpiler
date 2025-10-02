@@ -9,7 +9,6 @@ import java.util.List;
 public class Analyser {
 
 	private final SymbolTable SYMBOL_TABLE = new SymbolTable();
-	private String currentMethodType = null;
 
 	public void analyse(List<Node> nodes){
 		for(Node node : nodes){
@@ -26,11 +25,11 @@ public class Analyser {
 				for(Node n : classDeclaration.classMembers){
 					analyse(n);
 				}
-				break;
+				return "void";
 
 			case FieldDeclaration fieldDeclaration:
 				this.SYMBOL_TABLE.declare(fieldDeclaration.numLine, fieldDeclaration.fieldName, fieldDeclaration.type.toString(), new ArrayList<>());
-				break;
+				return "void";
 
 			case MethodDeclarationNode methodDeclaration :
 				List<String> params = new ArrayList<>();
@@ -38,12 +37,14 @@ public class Analyser {
 					params.add(analyse(n));
 				}
 				this.SYMBOL_TABLE.declare(methodDeclaration.numLine, methodDeclaration.methodName, methodDeclaration.type.toString(), params);
-				this.currentMethodType = methodDeclaration.type.toString();
-
+				String methodType = methodDeclaration.type.toString();
 				this.SYMBOL_TABLE.enterScope();
-				analyse(methodDeclaration.block);
+				String bockType = analyse(methodDeclaration.block);
+				if (!methodType.equals(bockType)) {
+					Error.semanticError(methodDeclaration.numLine, "Type mismatch, returned "+bockType+" instead of "+methodType);
+				}
 				this.SYMBOL_TABLE.exitScope();
-				break;
+				return "void";
 
 			case ParameterNode parameter :
 				this.SYMBOL_TABLE.declare(parameter.numLine, parameter.identifier.toString(), parameter.type, new ArrayList<>());
@@ -55,7 +56,7 @@ public class Analyser {
 					Error.semanticError(assignment.numLine, "Type mismatch '" + assignment.identifier + "' got " + realType + " instead of " + assignment.type);
 				}
 				this.SYMBOL_TABLE.declare(assignment.numLine, assignment.identifier, assignment.type, new ArrayList<>());
-				break;
+				return "void";
 
 			case IfNode ifNode :
 				if(!analyse(ifNode.boolExpr).equals("empty")) {
@@ -67,7 +68,7 @@ public class Analyser {
 				for(Node n : ifNode.orElse){
 					analyse(n);
 				}
-				break;
+				return "void";
 
 			case BlockNode block :
 				this.SYMBOL_TABLE.enterScope();
@@ -75,17 +76,11 @@ public class Analyser {
 					analyse(statement);
 				}
 				this.SYMBOL_TABLE.exitScope();
-				break;
+				if(block.statements.isEmpty()) return "void";
+				else return analyse(block.statements.getLast());
 
 			case ReturnNode returnNode :
-				String returnType = analyse(returnNode.expression);
-				if(this.currentMethodType.equals("void")){
-					Error.semanticError(returnNode.numLine, "Return " + returnType + " in a void method");
-				}else if(!returnType.equals(this.currentMethodType)){
-					Error.semanticError(returnNode.numLine, "Return type mismatch, got " + returnType + " instead of " + this.currentMethodType);
-				}
-				this.currentMethodType = null;
-				break;
+				return analyse(returnNode.expression);
 
 			case MethodCallNode methodCall ://bon nombre et bon type des args
 				Symbol method = this.SYMBOL_TABLE.lookup(methodCall.numLine, methodCall.identifier);
@@ -107,7 +102,7 @@ public class Analyser {
 				if(!analyse(whileNode.bool_expr).equals("boolean")) Error.semanticError(whileNode.numLine, "while expect a boolean expression");
 				analyse(whileNode.bool_expr);
 				analyse(whileNode.block);
-				break;
+				return "void";
 
 			case NotNode notNode :
 				String expressionType = analyse(notNode.expression);
@@ -127,7 +122,7 @@ public class Analyser {
 				if(identifier != null){
 					return identifier.type;
 				}
-				break;
+				return "void";
 
 			case LiteralNode literal:
 				return literal.type;
@@ -139,7 +134,6 @@ public class Analyser {
 				Error.semanticError(node.numLine, "Unexpected Node: "+node.getClass());
 				throw new IllegalStateException("Unexpected value: " + node.getClass());
 		}
-		return "";
 	}
 
 	public String getType(int numLine, String type1, String operator, String type2){
